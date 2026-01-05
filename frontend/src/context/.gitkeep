@@ -1,0 +1,9 @@
+# Context Directory
+
+React Context providers will be created here in future phases.
+
+Examples:
+- AuthContext
+- PlayerContext
+- ThemeContext
+- etc.
