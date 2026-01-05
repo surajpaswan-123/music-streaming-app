@@ -4,22 +4,32 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  background: linear-gradient(to bottom, #121212 0%, #0a0a0a 100%);
 }
 
 .app-header {
-  background-color: var(--secondary-color);
+  background: linear-gradient(to right, #1a1a1a 0%, #2d2d2d 100%);
   padding: 1rem 2rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   gap: 2rem;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .app-header h1 {
   font-size: 1.5rem;
   font-weight: 700;
   white-space: nowrap;
+  background: linear-gradient(135deg, var(--primary-color) 0%, #1ed760 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .app-header nav {
@@ -30,8 +40,21 @@
 
 .app-header nav a {
   font-weight: 500;
-  transition: color 0.2s;
+  transition: all 0.2s;
   white-space: nowrap;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  position: relative;
+}
+
+.app-header nav a:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: var(--primary-color);
+}
+
+.app-header nav a.active {
+  color: var(--primary-color);
+  background-color: rgba(29, 185, 84, 0.1);
 }
 
 .auth-actions {
@@ -47,6 +70,9 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  padding: 0.5rem 1rem;
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 20px;
 }
 
 .signout-btn {
@@ -63,8 +89,10 @@
 }
 
 .signout-btn:hover {
-  background-color: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.3);
+  background-color: rgba(255, 107, 107, 0.2);
+  border-color: #ff6b6b;
+  color: #ff6b6b;
+  transform: translateY(-1px);
 }
 
 .login-link,
@@ -83,6 +111,7 @@
 
 .login-link:hover {
   color: var(--primary-color);
+  background-color: rgba(255, 255, 255, 0.05);
 }
 
 .signup-link {
@@ -92,7 +121,8 @@
 
 .signup-link:hover {
   background-color: #1ed760;
-  transform: scale(1.05);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(30, 215, 96, 0.3);
 }
 
 .app-main {
@@ -101,14 +131,7 @@
   max-width: 1400px;
   width: 100%;
   margin: 0 auto;
-}
-
-.app-footer {
-  background-color: var(--secondary-color);
-  padding: 1rem 2rem;
-  text-align: center;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  color: var(--text-secondary);
+  animation: fadeIn 0.3s ease-in;
 }
 
 /* Page Styles */
@@ -119,14 +142,16 @@
 .page h2 {
   font-size: 2rem;
   margin-bottom: 1.5rem;
+  font-weight: 700;
 }
 
 .placeholder {
-  background-color: var(--surface);
+  background: linear-gradient(135deg, var(--surface) 0%, #282828 100%);
   padding: 3rem;
   border-radius: var(--border-radius);
   text-align: center;
   margin-top: 2rem;
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .placeholder p {
@@ -140,6 +165,17 @@
   from {
     opacity: 0;
     transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
   }
   to {
     opacity: 1;
@@ -178,6 +214,13 @@
     justify-content: center;
     gap: 1rem;
     margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  .app-header nav a {
+    padding: 0.4rem 0.875rem;
+    font-size: 0.9rem;
   }
 
   .auth-actions {
@@ -197,5 +240,20 @@
 
   .placeholder {
     padding: 2rem 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .app-header h1 {
+    font-size: 1.1rem;
+  }
+
+  .app-header nav {
+    gap: 0.5rem;
+  }
+
+  .app-header nav a {
+    padding: 0.35rem 0.75rem;
+    font-size: 0.85rem;
   }
 }
