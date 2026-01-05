@@ -1,10 +1,10 @@
 # 🎵 Music Streaming App
 
-A modern, scalable music streaming application inspired by JioSaavn, built with React and Node.js.
+A modern, full-stack music streaming application with user authentication, personal library, and playlist management. Built with React, Node.js, and Supabase.
 
 ## 📋 Project Overview
 
-This is a full-stack music streaming platform that provides users with a seamless experience for discovering, playing, and managing their favorite music. The application is built with modern web technologies and follows industry-standard practices for scalability and maintainability.
+This is a complete music streaming platform that provides users with authentication, personalized music library, playlist management, and seamless audio playback. The application follows industry-standard practices for security, scalability, and user experience.
 
 ## 🚀 Tech Stack
 
@@ -14,16 +14,61 @@ This is a full-stack music streaming platform that provides users with a seamles
 - **React Router** - Client-side routing
 - **Context API** - State management
 - **HTML5 Audio API** - Audio playback
+- **Supabase Client** - Authentication and database
 - **CSS3** - Styling
 
 ### Backend
 - **Node.js** - Runtime environment
 - **Express.js** - Web framework
+- **Supabase** - Authentication and PostgreSQL database
 - **RESTful API** - API architecture
+
+### Database & Auth
+- **Supabase** - Backend-as-a-Service
+- **PostgreSQL** - Relational database
+- **Row Level Security (RLS)** - Data security
 
 ### Development Tools
 - **Git** - Version control
 - **npm** - Package manager
+
+## ✨ Features (Phase-3 Complete)
+
+### 🔐 Authentication
+- ✅ Email/Password signup and login
+- ✅ Secure session management
+- ✅ Protected routes
+- ✅ Persistent authentication
+- ✅ Sign out functionality
+
+### 🎵 Music Player
+- ✅ Play/Pause controls
+- ✅ Next/Previous track
+- ✅ Progress bar with seek
+- ✅ Volume control
+- ✅ Auto-play next song
+- ✅ Persistent across navigation
+
+### ❤️ User Library
+- ✅ Like/Unlike songs
+- ✅ View liked songs
+- ✅ User-specific data
+- ✅ Real-time updates
+- ✅ Data persistence
+
+### 📚 Playlists
+- ✅ Create playlists
+- ✅ View user playlists
+- ✅ User-specific playlists
+- ✅ Playlist metadata
+
+### 🎨 User Interface
+- ✅ Song listing with covers
+- ✅ Real-time search
+- ✅ Responsive design
+- ✅ Loading states
+- ✅ Error handling
+- ✅ User profile page
 
 ## 📁 Project Structure
 
@@ -32,36 +77,31 @@ music-streaming-app/
 ├── frontend/                # React Application
 │   ├── public/             # Static assets
 │   └── src/
-│       ├── components/     # Reusable UI components (SongCard)
-│       ├── pages/          # Page components (Home, Search, Library, Profile)
+│       ├── components/     # Reusable UI (SongCard, ProtectedRoute)
+│       ├── pages/          # Pages (Home, Search, Library, Profile, Login, Signup)
 │       ├── player/         # Audio player component
-│       ├── services/       # API integration layer
-│       ├── hooks/          # Custom React hooks
-│       ├── context/        # React Context (PlayerContext)
-│       ├── assets/         # Images, icons, fonts
-│       ├── styles/         # Global styles and CSS modules
-│       ├── App.jsx         # Root component
-│       └── main.jsx        # Application entry point
+│       ├── services/       # API integration
+│       ├── context/        # React Context (Auth, Player)
+│       ├── config/         # Supabase configuration
+│       ├── styles/         # Global styles
+│       └── App.jsx         # Root component
 │
 ├── backend/                # API Server
 │   ├── src/
-│   │   ├── routes/         # API route definitions
+│   │   ├── routes/         # API routes
 │   │   ├── controllers/    # Request handlers
-│   │   ├── data/           # Sample song data
-│   │   ├── services/       # Business logic
-│   │   ├── middleware/     # Custom middleware
-│   │   ├── config/         # Configuration files
-│   │   └── app.js          # Express app setup
-│   ├── package.json
-│   └── README.md
+│   │   ├── middleware/     # Auth middleware
+│   │   ├── config/         # Supabase config
+│   │   ├── data/           # Sample data
+│   │   └── app.js          # Express app
+│   └── package.json
 │
 ├── database/
-│   └── schema.md           # Database design documentation
+│   └── schema.md           # Database design
 │
-├── .gitignore
+├── SUPABASE-SETUP.md       # Supabase setup guide
 ├── .env.example
-├── README.md
-└── SETUP.md
+└── README.md
 ```
 
 ## 🛠️ Setup Instructions
@@ -69,127 +109,158 @@ music-streaming-app/
 ### Prerequisites
 - Node.js (v18 or higher)
 - npm or yarn
-- Git
+- Supabase account (free tier)
 
-### Installation
+### 1. Supabase Setup
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/surajpaswan-123/music-streaming-app.git
-   cd music-streaming-app
-   ```
+Follow the detailed guide in [SUPABASE-SETUP.md](./SUPABASE-SETUP.md):
 
-2. **Setup Backend**
-   ```bash
-   cd backend
-   npm install
-   cp ../.env.example .env
-   npm run dev
-   ```
-   Backend will run on `http://localhost:5000`
+1. Create Supabase project
+2. Enable email authentication
+3. Run SQL schema to create tables
+4. Get API keys
 
-3. **Setup Frontend** (in a new terminal)
-   ```bash
-   cd frontend
-   npm install
-   npm run dev
-   ```
-   Frontend will run on `http://localhost:5173`
+### 2. Backend Setup
 
-## ✨ Features (Phase-2 Complete)
+```bash
+cd backend
+npm install
 
-### ✅ Implemented
-- **Song Listing**: Browse 10 sample songs with cover art
-- **Audio Player**: Fully functional player with:
-  - Play/Pause controls
-  - Next/Previous track navigation
-  - Progress bar with seek functionality
-  - Volume control
-  - Current song display
-- **Search**: Real-time song search by title, artist, or album
-- **Responsive Design**: Works on desktop, tablet, and mobile
-- **Loading States**: Smooth loading indicators
-- **Error Handling**: User-friendly error messages
+# Create .env file
+cp ../.env.example .env
 
-### 🎵 Audio Player Features
-- Global state management using React Context
-- Persistent player across page navigation
-- Auto-play next song when current ends
-- Visual playing indicator on active song
-- Keyboard-friendly controls
-- Smooth animations and transitions
+# Add your Supabase credentials:
+# SUPABASE_URL=your_project_url
+# SUPABASE_SERVICE_KEY=your_service_role_key
 
-### 🎯 API Endpoints
+npm run dev
+```
 
-#### Songs
+Backend runs on `http://localhost:5000`
+
+### 3. Frontend Setup
+
+```bash
+cd frontend
+npm install
+
+# Create .env file
+cp ../.env.example .env
+
+# Add your Supabase credentials:
+# VITE_SUPABASE_URL=your_project_url
+# VITE_SUPABASE_ANON_KEY=your_anon_key
+
+npm run dev
+```
+
+Frontend runs on `http://localhost:5173`
+
+## 🎯 API Endpoints
+
+### Public Endpoints
 - `GET /api/songs` - Get all songs
-- `GET /api/songs/:id` - Get single song by ID
+- `GET /api/songs/:id` - Get single song
 - `GET /api/songs/search?q=query` - Search songs
 
-#### Health
-- `GET /api/health` - Server health status
+### Protected Endpoints (Require Authentication)
 
-## 🎨 UI Components
+#### Library
+- `GET /api/library/liked` - Get liked songs
+- `POST /api/library/like/:songId` - Like a song
+- `DELETE /api/library/unlike/:songId` - Unlike a song
+- `GET /api/library/is-liked/:songId` - Check if song is liked
 
-- **SongCard**: Interactive song cards with hover effects and play buttons
-- **AudioPlayer**: Bottom-fixed player with full controls
-- **Search Bar**: Real-time search with clear functionality
-- **Loading Spinner**: Animated loading states
-- **Error Messages**: User-friendly error displays
+#### Playlists
+- `GET /api/playlists` - Get user playlists
+- `POST /api/playlists` - Create playlist
+- `GET /api/playlists/:id` - Get playlist with songs
+- `PUT /api/playlists/:id` - Update playlist
+- `DELETE /api/playlists/:id` - Delete playlist
+- `POST /api/playlists/:id/songs` - Add song to playlist
+- `DELETE /api/playlists/:id/songs/:songId` - Remove song from playlist
 
-## 📝 Sample Data
+## 🔒 Security Features
 
-The app uses 10 royalty-free sample songs with:
-- High-quality cover images from Unsplash
-- Sample audio from SoundHelix
-- Metadata (title, artist, album, duration)
-
-**Note**: All audio files are royalty-free samples for demonstration purposes.
-
-## 🎯 Phase Status
-
-### ✅ Phase-1: Foundation Setup (Complete)
-- Repository structure
-- Frontend boilerplate (React + Vite)
-- Backend boilerplate (Node.js + Express)
-- Basic routing
-- Documentation
-
-### ✅ Phase-2: Core Player & Song Listing (Complete)
-- Song listing API with sample data
-- Functional audio player with all controls
-- Song selection and playback
-- Search functionality
-- Responsive UI
-- Loading and error states
-
-### 🔜 Phase-3: Coming Soon
-- User authentication
-- Playlist creation and management
-- User library
-- Favorites/Liked songs
-- Database integration (Supabase)
+- ✅ Row Level Security (RLS) on all tables
+- ✅ JWT-based authentication
+- ✅ Secure password hashing (Supabase)
+- ✅ Protected API routes
+- ✅ User-specific data isolation
+- ✅ Service key only in backend
+- ✅ CORS configuration
 
 ## 🧪 Testing the App
 
-1. **Start both servers** (backend on :5000, frontend on :5173)
-2. **Browse songs** on the Home page
-3. **Click any song** to start playback
-4. **Use player controls**:
-   - Play/Pause button
-   - Next/Previous buttons
-   - Seek by clicking progress bar
-   - Adjust volume with slider
-5. **Search songs** using the Search page
-6. **Navigate pages** - player persists across routes
+1. **Sign Up**: Create a new account at `/signup`
+2. **Sign In**: Login at `/login`
+3. **Browse Music**: View songs on home page
+4. **Like Songs**: Click heart icon on any song
+5. **View Library**: Check your liked songs at `/library`
+6. **Create Playlist**: (Coming in Phase-4)
+7. **Play Music**: Click any song to play
+8. **Sign Out**: Use sign out button in header
+
+## 📊 Database Schema
+
+### Tables
+
+**playlists**
+- `id` (UUID, Primary Key)
+- `user_id` (UUID, Foreign Key → auth.users)
+- `name` (TEXT)
+- `description` (TEXT)
+- `created_at` (TIMESTAMP)
+- `updated_at` (TIMESTAMP)
+
+**playlist_songs**
+- `id` (UUID, Primary Key)
+- `playlist_id` (UUID, Foreign Key → playlists)
+- `song_id` (TEXT)
+- `added_at` (TIMESTAMP)
+
+**liked_songs**
+- `id` (UUID, Primary Key)
+- `user_id` (UUID, Foreign Key → auth.users)
+- `song_id` (TEXT)
+- `liked_at` (TIMESTAMP)
+- UNIQUE constraint on (user_id, song_id)
+
+## 🎯 Phase Status
+
+### ✅ Phase-1: Foundation (Complete)
+- Repository structure
+- Frontend/Backend boilerplate
+- Basic routing
+- Documentation
+
+### ✅ Phase-2: Core Player (Complete)
+- Song listing API
+- Functional audio player
+- Search functionality
+- Responsive UI
+
+### ✅ Phase-3: Auth & Library (Complete)
+- User authentication (Supabase)
+- Liked songs functionality
+- User library
+- Playlist structure
+- Protected routes
+- User profiles
+
+### 🔜 Phase-4: Coming Soon
+- Advanced playlist management
+- Song recommendations
+- UI polish
+- Social features
 
 ## 🤝 Contributing
 
-This project follows industry-standard coding practices. Please ensure:
+This project follows industry-standard coding practices:
 - Clean, readable code
 - Meaningful commit messages
 - Proper documentation
-- No hardcoded secrets or API keys
+- Security best practices
 
 ## 📄 License
 
@@ -201,6 +272,8 @@ Suraj Paswan
 
 ---
 
-**Current Status**: Phase-2 Complete - Core music streaming functionality is live! 🎉
+**Current Status**: Phase-3 Complete - Full authentication and user library system! 🎉
 
 **Repository**: https://github.com/surajpaswan-123/music-streaming-app
+
+**Live Demo**: Deploy to Vercel/Netlify (Coming Soon)
