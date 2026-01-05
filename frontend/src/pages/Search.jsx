@@ -1,123 +1,155 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { searchSongs } from '../services/api';
-import { usePlayer } from '../context/PlayerContext';
 import SongCard from '../components/SongCard';
 import './Search.css';
+
+// Debounce hook
+function useDebounce(value, delay) {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+}
 
 function Search() {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [searched, setSearched] = useState(false);
-  const { playSong } = usePlayer();
+  const [hasSearched, setHasSearched] = useState(false);
 
-  const handleSearch = async (e) => {
-    e.preventDefault();
-    
-    if (!query.trim()) return;
+  const debouncedQuery = useDebounce(query, 300);
 
+  useEffect(() => {
+    if (debouncedQuery.trim()) {
+      performSearch(debouncedQuery);
+    } else {
+      setResults([]);
+      setHasSearched(false);
+    }
+  }, [debouncedQuery]);
+
+  const performSearch = async (searchQuery) => {
     try {
       setLoading(true);
       setError(null);
-      setSearched(true);
-      
-      const response = await searchSongs(query);
-      
-      if (response.success) {
-        setResults(response.data);
-      }
+      setHasSearched(true);
+
+      const response = await searchSongs(searchQuery);
+      setResults(response.data || []);
     } catch (err) {
       console.error('Search failed:', err);
-      setError('Search failed. Please try again.');
+      setError('Failed to search songs. Please try again.');
+      setResults([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleInputChange = (e) => {
-    setQuery(e.target.value);
-    if (!e.target.value.trim()) {
-      setResults([]);
-      setSearched(false);
-    }
+  const handleClear = () => {
+    setQuery('');
+    setResults([]);
+    setHasSearched(false);
+    setError(null);
   };
 
   return (
     <div className="page search-page">
-      <h2>Search</h2>
-      
-      <form onSubmit={handleSearch} className="search-form">
-        <div className="search-input-container">
+      <div className="search-header">
+        <h2>Search</h2>
+        <p className="search-subtitle">Find your favorite songs, artists, and albums</p>
+      </div>
+
+      <div className="search-container">
+        <div className="search-input-wrapper">
           <span className="search-icon">🔍</span>
           <input
             type="text"
-            placeholder="Search for songs, artists, albums..."
-            value={query}
-            onChange={handleInputChange}
             className="search-input"
+            placeholder="Search for songs, artists, or albums..."
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            autoFocus
           />
           {query && (
-            <button
-              type="button"
-              onClick={() => {
-                setQuery('');
-                setResults([]);
-                setSearched(false);
-              }}
-              className="clear-btn"
-            >
+            <button className="search-clear-btn" onClick={handleClear}>
               ✕
             </button>
           )}
         </div>
-        <button type="submit" className="search-btn" disabled={!query.trim()}>
-          Search
-        </button>
-      </form>
 
-      {loading && (
-        <div className="loading-container">
-          <div className="loading-spinner"></div>
-          <p>Searching...</p>
-        </div>
-      )}
-
-      {error && (
-        <div className="error-container">
-          <p className="error-message">❌ {error}</p>
-        </div>
-      )}
-
-      {!loading && searched && results.length === 0 && (
-        <div className="empty-state">
-          <p>No results found for "{query}"</p>
-          <p className="empty-state-hint">Try different keywords</p>
-        </div>
-      )}
-
-      {!loading && results.length > 0 && (
-        <div className="search-results">
-          <h3 className="results-header">
-            Found {results.length} result{results.length !== 1 ? 's' : ''} for "{query}"
-          </h3>
-          <div className="songs-grid">
-            {results.map(song => (
-              <SongCard key={song.id} song={song} />
-            ))}
+        {loading && (
+          <div className="search-loading">
+            <div className="loading-spinner"></div>
+            <p>Searching...</p>
           </div>
-        </div>
-      )}
+        )}
 
-      {!searched && !loading && (
-        <div className="search-placeholder">
-          <div className="search-placeholder-icon">🎵</div>
-          <p>Search for your favorite songs</p>
-          <p className="search-placeholder-hint">
-            Try searching for song titles, artists, or albums
-          </p>
-        </div>
-      )}
+        {error && (
+          <div className="search-error">
+            <p className="error-message">❌ {error}</p>
+          </div>
+        )}
+
+        {!loading && !error && hasSearched && results.length === 0 && (
+          <div className="search-empty">
+            <div className="empty-icon">🎵</div>
+            <h3>No results found</h3>
+            <p>Try searching with different keywords</p>
+            <div className="search-hints">
+              <p className="hints-title">Search tips:</p>
+              <ul>
+                <li>Check your spelling</li>
+                <li>Try different keywords</li>
+                <li>Search by artist name</li>
+                <li>Search by song title</li>
+              </ul>
+            </div>
+          </div>
+        )}
+
+        {!loading && !error && results.length > 0 && (
+          <div className="search-results">
+            <div className="results-header">
+              <h3>Found {results.length} {results.length === 1 ? 'song' : 'songs'}</h3>
+            </div>
+            <div className="songs-grid">
+              {results.map(song => (
+                <SongCard key={song.id} song={song} />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {!loading && !error && !hasSearched && (
+          <div className="search-suggestions">
+            <h3>Popular Searches</h3>
+            <div className="suggestion-chips">
+              <button className="suggestion-chip" onClick={() => setQuery('rock')}>
+                🎸 Rock
+              </button>
+              <button className="suggestion-chip" onClick={() => setQuery('jazz')}>
+                🎷 Jazz
+              </button>
+              <button className="suggestion-chip" onClick={() => setQuery('classical')}>
+                🎻 Classical
+              </button>
+              <button className="suggestion-chip" onClick={() => setQuery('electronic')}>
+                🎹 Electronic
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
