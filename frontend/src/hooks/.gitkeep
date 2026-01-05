@@ -1,0 +1,9 @@
+# Hooks Directory
+
+Custom React hooks will be created here in future phases.
+
+Examples:
+- useAudioPlayer
+- useAuth
+- useFetch
+- etc.
