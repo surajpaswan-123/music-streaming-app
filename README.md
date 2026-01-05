@@ -12,6 +12,8 @@ This is a full-stack music streaming platform that provides users with a seamles
 - **React 18** - UI library
 - **Vite** - Build tool and dev server
 - **React Router** - Client-side routing
+- **Context API** - State management
+- **HTML5 Audio API** - Audio playback
 - **CSS3** - Styling
 
 ### Backend
@@ -30,12 +32,12 @@ music-streaming-app/
 ├── frontend/                # React Application
 │   ├── public/             # Static assets
 │   └── src/
-│       ├── components/     # Reusable UI components
+│       ├── components/     # Reusable UI components (SongCard)
 │       ├── pages/          # Page components (Home, Search, Library, Profile)
-│       ├── player/         # Audio player logic and components
+│       ├── player/         # Audio player component
 │       ├── services/       # API integration layer
 │       ├── hooks/          # Custom React hooks
-│       ├── context/        # React Context providers
+│       ├── context/        # React Context (PlayerContext)
 │       ├── assets/         # Images, icons, fonts
 │       ├── styles/         # Global styles and CSS modules
 │       ├── App.jsx         # Root component
@@ -45,6 +47,7 @@ music-streaming-app/
 │   ├── src/
 │   │   ├── routes/         # API route definitions
 │   │   ├── controllers/    # Request handlers
+│   │   ├── data/           # Sample song data
 │   │   ├── services/       # Business logic
 │   │   ├── middleware/     # Custom middleware
 │   │   ├── config/         # Configuration files
@@ -57,7 +60,8 @@ music-streaming-app/
 │
 ├── .gitignore
 ├── .env.example
-└── README.md
+├── README.md
+└── SETUP.md
 ```
 
 ## 🛠️ Setup Instructions
@@ -92,35 +96,92 @@ music-streaming-app/
    ```
    Frontend will run on `http://localhost:5173`
 
-## 🎯 Phase-1 Scope (Current)
+## ✨ Features (Phase-2 Complete)
 
-### ✅ Completed
-- Repository structure setup
+### ✅ Implemented
+- **Song Listing**: Browse 10 sample songs with cover art
+- **Audio Player**: Fully functional player with:
+  - Play/Pause controls
+  - Next/Previous track navigation
+  - Progress bar with seek functionality
+  - Volume control
+  - Current song display
+- **Search**: Real-time song search by title, artist, or album
+- **Responsive Design**: Works on desktop, tablet, and mobile
+- **Loading States**: Smooth loading indicators
+- **Error Handling**: User-friendly error messages
+
+### 🎵 Audio Player Features
+- Global state management using React Context
+- Persistent player across page navigation
+- Auto-play next song when current ends
+- Visual playing indicator on active song
+- Keyboard-friendly controls
+- Smooth animations and transitions
+
+### 🎯 API Endpoints
+
+#### Songs
+- `GET /api/songs` - Get all songs
+- `GET /api/songs/:id` - Get single song by ID
+- `GET /api/songs/search?q=query` - Search songs
+
+#### Health
+- `GET /api/health` - Server health status
+
+## 🎨 UI Components
+
+- **SongCard**: Interactive song cards with hover effects and play buttons
+- **AudioPlayer**: Bottom-fixed player with full controls
+- **Search Bar**: Real-time search with clear functionality
+- **Loading Spinner**: Animated loading states
+- **Error Messages**: User-friendly error displays
+
+## 📝 Sample Data
+
+The app uses 10 royalty-free sample songs with:
+- High-quality cover images from Unsplash
+- Sample audio from SoundHelix
+- Metadata (title, artist, album, duration)
+
+**Note**: All audio files are royalty-free samples for demonstration purposes.
+
+## 🎯 Phase Status
+
+### ✅ Phase-1: Foundation Setup (Complete)
+- Repository structure
 - Frontend boilerplate (React + Vite)
 - Backend boilerplate (Node.js + Express)
-- Basic routing structure
-- Health check API endpoint
-- Development environment configuration
+- Basic routing
 - Documentation
 
-### ❌ Not Included (Future Phases)
-- Music streaming logic
-- Audio player implementation
-- User authentication
-- Database integration
-- Music scraping/fetching
+### ✅ Phase-2: Core Player & Song Listing (Complete)
+- Song listing API with sample data
+- Functional audio player with all controls
+- Song selection and playback
 - Search functionality
-- Playlist management
-- User profiles
+- Responsive UI
+- Loading and error states
 
-## 🔜 Next Steps
+### 🔜 Phase-3: Coming Soon
+- User authentication
+- Playlist creation and management
+- User library
+- Favorites/Liked songs
+- Database integration (Supabase)
 
-This foundation is ready for **Phase-2: Core Player & Song Listing** development.
+## 🧪 Testing the App
 
-## 📝 API Endpoints
-
-### Health Check
-- `GET /api/health` - Server health status
+1. **Start both servers** (backend on :5000, frontend on :5173)
+2. **Browse songs** on the Home page
+3. **Click any song** to start playback
+4. **Use player controls**:
+   - Play/Pause button
+   - Next/Previous buttons
+   - Seek by clicking progress bar
+   - Adjust volume with slider
+5. **Search songs** using the Search page
+6. **Navigate pages** - player persists across routes
 
 ## 🤝 Contributing
 
@@ -140,4 +201,6 @@ Suraj Paswan
 
 ---
 
-**Note:** This is a Phase-1 foundation setup. The application is structured for AI-assisted development and follows scalable architecture patterns.
+**Current Status**: Phase-2 Complete - Core music streaming functionality is live! 🎉
+
+**Repository**: https://github.com/surajpaswan-123/music-streaming-app
