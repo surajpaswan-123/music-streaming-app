@@ -14,108 +14,116 @@ function AudioPlayer() {
     playPrevious,
     seekTo,
     changeVolume,
-    formatTime
+    formatTime,
   } = usePlayer();
 
   const handleProgressClick = (e) => {
+    if (!currentSong || !duration) return;
+    
     const progressBar = e.currentTarget;
-    const clickPosition = e.nativeEvent.offsetX;
-    const barWidth = progressBar.offsetWidth;
-    const seekTime = (clickPosition / barWidth) * duration;
-    seekTo(seekTime);
+    const rect = progressBar.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const percentage = clickX / rect.width;
+    const newTime = percentage * duration;
+    
+    seekTo(newTime);
   };
 
   const handleVolumeChange = (e) => {
-    changeVolume(parseFloat(e.target.value));
+    const newVolume = parseFloat(e.target.value);
+    changeVolume(newVolume);
   };
+
+  const progressPercentage = duration > 0 ? (currentTime / duration) * 100 : 0;
 
   if (!currentSong) {
     return (
-      <div className="audio-player">
-        <div className="player-placeholder">
-          <p>🎵 Select a song to start playing</p>
+      <div className="audio-player audio-player-empty">
+        <div className="player-empty-state">
+          <span className="empty-icon">🎵</span>
+          <span className="empty-text">Select a song to start playing</span>
         </div>
       </div>
     );
   }
 
-  const progressPercentage = duration ? (currentTime / duration) * 100 : 0;
-
   return (
     <div className="audio-player">
-      <div className="player-content">
-        {/* Song Info */}
-        <div className="player-song-info">
-          <img 
-            src={currentSong.cover} 
-            alt={currentSong.title}
-            className="player-cover"
-          />
-          <div className="player-text">
-            <div className="player-title">{currentSong.title}</div>
-            <div className="player-artist">{currentSong.artist}</div>
-          </div>
+      {/* Song Info */}
+      <div className="player-song-info">
+        <img 
+          src={currentSong.cover} 
+          alt={currentSong.title}
+          className="player-cover"
+        />
+        <div className="player-details">
+          <h4 className="player-title">{currentSong.title}</h4>
+          <p className="player-artist">{currentSong.artist}</p>
+        </div>
+      </div>
+
+      {/* Player Controls */}
+      <div className="player-controls-section">
+        <div className="player-buttons">
+          <button 
+            className="player-btn player-btn-prev"
+            onClick={playPrevious}
+            title="Previous"
+          >
+            ⏮️
+          </button>
+          
+          <button 
+            className="player-btn player-btn-play"
+            onClick={togglePlay}
+            title={isPlaying ? 'Pause' : 'Play'}
+          >
+            {isPlaying ? '⏸️' : '▶️'}
+          </button>
+          
+          <button 
+            className="player-btn player-btn-next"
+            onClick={playNext}
+            title="Next"
+          >
+            ⏭️
+          </button>
         </div>
 
-        {/* Player Controls */}
-        <div className="player-center">
-          <div className="player-controls">
-            <button 
-              className="control-btn"
-              onClick={playPrevious}
-              title="Previous"
-            >
-              ⏮️
-            </button>
-            <button 
-              className="control-btn control-btn-play"
-              onClick={togglePlay}
-              title={isPlaying ? 'Pause' : 'Play'}
-            >
-              {isPlaying ? '⏸️' : '▶️'}
-            </button>
-            <button 
-              className="control-btn"
-              onClick={playNext}
-              title="Next"
-            >
-              ⏭️
-            </button>
-          </div>
-
-          {/* Progress Bar */}
-          <div className="player-progress-container">
-            <span className="time-label">{formatTime(currentTime)}</span>
+        {/* Progress Bar */}
+        <div className="player-progress-container">
+          <span className="player-time">{formatTime(currentTime)}</span>
+          <div 
+            className="player-progress-bar"
+            onClick={handleProgressClick}
+          >
             <div 
-              className="progress-bar-container"
-              onClick={handleProgressClick}
+              className="player-progress-fill"
+              style={{ width: `${progressPercentage}%` }}
             >
-              <div className="progress-bar-bg">
-                <div 
-                  className="progress-bar-fill"
-                  style={{ width: `${progressPercentage}%` }}
-                />
-              </div>
+              <div className="player-progress-handle"></div>
             </div>
-            <span className="time-label">{formatTime(duration)}</span>
           </div>
+          <span className="player-time">{formatTime(duration)}</span>
         </div>
+      </div>
 
-        {/* Volume Control */}
-        <div className="player-volume">
-          <span className="volume-icon">
-            {volume === 0 ? '🔇' : volume < 0.5 ? '🔉' : '🔊'}
-          </span>
-          <input
-            type="range"
-            min="0"
-            max="1"
-            step="0.01"
-            value={volume}
-            onChange={handleVolumeChange}
-            className="volume-slider"
-          />
-        </div>
+      {/* Volume Control */}
+      <div className="player-volume-section">
+        <span className="volume-icon">
+          {volume === 0 ? '🔇' : volume < 0.5 ? '🔉' : '🔊'}
+        </span>
+        <input
+          type="range"
+          min="0"
+          max="1"
+          step="0.01"
+          value={volume}
+          onChange={handleVolumeChange}
+          className="player-volume-slider"
+          title={`Volume: ${Math.round(volume * 100)}%`}
+        />
+        <span className="volume-percentage">{Math.round(volume * 100)}%</span>
       </div>
     </div>
   );
