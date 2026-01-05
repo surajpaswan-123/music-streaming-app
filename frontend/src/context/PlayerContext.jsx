@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useRef, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import { addToRecentlyPlayed } from '../services/recommendations';
 
 const PlayerContext = createContext();
 
@@ -11,33 +12,14 @@ export const usePlayer = () => {
 };
 
 export const PlayerProvider = ({ children }) => {
-  const audioRef = useRef(new Audio());
-  
   const [currentSong, setCurrentSong] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(1);
   const [playlist, setPlaylist] = useState([]);
-  const [currentIndex, setCurrentIndex] = useState(-1);
+  const audioRef = useRef(new Audio());
 
-  // Update audio source when song changes
-  useEffect(() => {
-    if (currentSong) {
-      audioRef.current.src = currentSong.audioUrl;
-      audioRef.current.load();
-      
-      // Auto-play when song changes
-      if (isPlaying) {
-        audioRef.current.play().catch(error => {
-          console.error('Playback failed:', error);
-          setIsPlaying(false);
-        });
-      }
-    }
-  }, [currentSong]);
-
-  // Audio event listeners
   useEffect(() => {
     const audio = audioRef.current;
 
@@ -50,7 +32,6 @@ export const PlayerProvider = ({ children }) => {
     };
 
     const handleEnded = () => {
-      // Auto-play next song
       playNext();
     };
 
@@ -70,17 +51,51 @@ export const PlayerProvider = ({ children }) => {
       audio.removeEventListener('ended', handleEnded);
       audio.removeEventListener('error', handleError);
     };
-  }, [currentIndex, playlist]);
+  }, [playlist]);
 
-  // Play/Pause toggle
+  const playSong = (song, newPlaylist = null) => {
+    if (!song) return;
+
+    const audio = audioRef.current;
+    
+    // Update playlist if provided
+    if (newPlaylist) {
+      setPlaylist(newPlaylist);
+    }
+
+    // If same song, just toggle play/pause
+    if (currentSong?.id === song.id) {
+      togglePlay();
+      return;
+    }
+
+    // Play new song
+    setCurrentSong(song);
+    audio.src = song.audio;
+    audio.volume = volume;
+    
+    audio.play()
+      .then(() => {
+        setIsPlaying(true);
+        // Add to recently played
+        addToRecentlyPlayed(song);
+      })
+      .catch(error => {
+        console.error('Playback failed:', error);
+        setIsPlaying(false);
+      });
+  };
+
   const togglePlay = () => {
+    const audio = audioRef.current;
+    
     if (!currentSong) return;
 
     if (isPlaying) {
-      audioRef.current.pause();
+      audio.pause();
       setIsPlaying(false);
     } else {
-      audioRef.current.play()
+      audio.play()
         .then(() => setIsPlaying(true))
         .catch(error => {
           console.error('Playback failed:', error);
@@ -89,59 +104,35 @@ export const PlayerProvider = ({ children }) => {
     }
   };
 
-  // Play specific song
-  const playSong = (song, songList = null) => {
-    setCurrentSong(song);
-    setIsPlaying(true);
-    
-    // Update playlist if provided
-    if (songList) {
-      setPlaylist(songList);
-      const index = songList.findIndex(s => s.id === song.id);
-      setCurrentIndex(index);
-    }
-  };
-
-  // Play next song
   const playNext = () => {
-    if (playlist.length === 0) return;
-    
+    if (playlist.length === 0 || !currentSong) return;
+
+    const currentIndex = playlist.findIndex(song => song.id === currentSong.id);
     const nextIndex = (currentIndex + 1) % playlist.length;
-    setCurrentIndex(nextIndex);
-    setCurrentSong(playlist[nextIndex]);
-    setIsPlaying(true);
+    playSong(playlist[nextIndex], playlist);
   };
 
-  // Play previous song
   const playPrevious = () => {
-    if (playlist.length === 0) return;
-    
-    // If more than 3 seconds played, restart current song
-    if (currentTime > 3) {
-      audioRef.current.currentTime = 0;
-      return;
-    }
-    
-    const prevIndex = currentIndex - 1 < 0 ? playlist.length - 1 : currentIndex - 1;
-    setCurrentIndex(prevIndex);
-    setCurrentSong(playlist[prevIndex]);
-    setIsPlaying(true);
+    if (playlist.length === 0 || !currentSong) return;
+
+    const currentIndex = playlist.findIndex(song => song.id === currentSong.id);
+    const prevIndex = currentIndex === 0 ? playlist.length - 1 : currentIndex - 1;
+    playSong(playlist[prevIndex], playlist);
   };
 
-  // Seek to specific time
   const seekTo = (time) => {
-    audioRef.current.currentTime = time;
+    const audio = audioRef.current;
+    audio.currentTime = time;
     setCurrentTime(time);
   };
 
-  // Change volume
   const changeVolume = (newVolume) => {
-    const vol = Math.max(0, Math.min(1, newVolume));
-    audioRef.current.volume = vol;
-    setVolume(vol);
+    const audio = audioRef.current;
+    const clampedVolume = Math.max(0, Math.min(1, newVolume));
+    audio.volume = clampedVolume;
+    setVolume(clampedVolume);
   };
 
-  // Format time (seconds to MM:SS)
   const formatTime = (seconds) => {
     if (isNaN(seconds)) return '0:00';
     const mins = Math.floor(seconds / 60);
@@ -156,14 +147,13 @@ export const PlayerProvider = ({ children }) => {
     duration,
     volume,
     playlist,
-    currentIndex,
-    togglePlay,
     playSong,
+    togglePlay,
     playNext,
     playPrevious,
     seekTo,
     changeVolume,
-    formatTime
+    formatTime,
   };
 
   return (
