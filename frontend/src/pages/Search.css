@@ -4,84 +4,159 @@
   padding-bottom: 120px;
 }
 
-.search-form {
-  display: flex;
-  gap: 1rem;
+.search-header {
   margin-bottom: 2rem;
 }
 
-.search-input-container {
-  flex: 1;
+.search-header h2 {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+  font-weight: 700;
+}
+
+.search-subtitle {
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+}
+
+.search-container {
+  max-width: 1200px;
+}
+
+.search-input-wrapper {
   position: relative;
+  margin-bottom: 2rem;
   display: flex;
   align-items: center;
+  background-color: var(--surface);
+  border-radius: 24px;
+  padding: 0.75rem 1.5rem;
+  transition: all 0.2s;
+  border: 2px solid transparent;
+}
+
+.search-input-wrapper:focus-within {
+  border-color: var(--primary-color);
+  box-shadow: 0 4px 12px rgba(30, 215, 96, 0.2);
 }
 
 .search-icon {
-  position: absolute;
-  left: 1rem;
-  font-size: 1.25rem;
+  font-size: 1.5rem;
+  margin-right: 1rem;
   color: var(--text-secondary);
 }
 
 .search-input {
-  width: 100%;
-  padding: 0.875rem 3rem 0.875rem 3rem;
-  background-color: var(--surface);
-  border: 2px solid transparent;
-  border-radius: 24px;
+  flex: 1;
+  background: none;
+  border: none;
   color: var(--text-color);
-  font-size: 1rem;
-  transition: all 0.2s;
-}
-
-.search-input:focus {
+  font-size: 1.1rem;
   outline: none;
-  border-color: var(--primary-color);
-  background-color: #282828;
 }
 
 .search-input::placeholder {
   color: var(--text-secondary);
 }
 
-.clear-btn {
-  position: absolute;
-  right: 1rem;
+.search-clear-btn {
   background: none;
   border: none;
   color: var(--text-secondary);
   font-size: 1.25rem;
   cursor: pointer;
-  padding: 0.25rem;
-  transition: color 0.2s;
-}
-
-.clear-btn:hover {
-  color: var(--text-color);
-}
-
-.search-btn {
-  background-color: var(--primary-color);
-  color: var(--text-color);
-  border: none;
-  padding: 0.875rem 2rem;
-  border-radius: 24px;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border-radius: 50%;
   transition: all 0.2s;
-  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
 }
 
-.search-btn:hover:not(:disabled) {
-  background-color: #1ed760;
-  transform: scale(1.05);
+.search-clear-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: var(--text-color);
 }
 
-.search-btn:disabled {
+.search-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  gap: 1rem;
+}
+
+.search-loading p {
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+}
+
+.search-error {
+  padding: 2rem;
+  text-align: center;
+}
+
+.search-empty {
+  text-align: center;
+  padding: 4rem 2rem;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.empty-icon {
+  font-size: 5rem;
+  margin-bottom: 1rem;
   opacity: 0.5;
-  cursor: not-allowed;
+}
+
+.search-empty h3 {
+  font-size: 1.75rem;
+  margin-bottom: 0.5rem;
+  color: var(--text-color);
+}
+
+.search-empty > p {
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+  margin-bottom: 2rem;
+}
+
+.search-hints {
+  background-color: var(--surface);
+  border-radius: 12px;
+  padding: 1.5rem;
+  text-align: left;
+  margin-top: 2rem;
+}
+
+.hints-title {
+  font-weight: 600;
+  color: var(--text-color);
+  margin-bottom: 0.75rem;
+}
+
+.search-hints ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.search-hints li {
+  color: var(--text-secondary);
+  padding: 0.5rem 0;
+  padding-left: 1.5rem;
+  position: relative;
+}
+
+.search-hints li::before {
+  content: '•';
+  position: absolute;
+  left: 0;
+  color: var(--primary-color);
+  font-weight: bold;
 }
 
 .search-results {
@@ -89,78 +164,114 @@
 }
 
 .results-header {
-  font-size: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.results-header h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.search-suggestions {
+  padding: 2rem 0;
+}
+
+.search-suggestions h3 {
+  font-size: 1.5rem;
   font-weight: 600;
   margin-bottom: 1.5rem;
   color: var(--text-color);
 }
 
-.search-placeholder {
+.suggestion-chips {
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.suggestion-chip {
+  background-color: var(--surface);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-color);
+  padding: 0.75rem 1.5rem;
+  border-radius: 24px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
   align-items: center;
-  justify-content: center;
-  min-height: 400px;
-  text-align: center;
-  color: var(--text-secondary);
+  gap: 0.5rem;
 }
 
-.search-placeholder-icon {
-  font-size: 4rem;
-  margin-bottom: 1rem;
-  opacity: 0.5;
-}
-
-.search-placeholder p {
-  font-size: 1.25rem;
-  margin-bottom: 0.5rem;
-}
-
-.search-placeholder-hint {
-  font-size: 0.95rem;
-  opacity: 0.7;
-}
-
-.empty-state-hint {
-  font-size: 0.95rem;
-  opacity: 0.7;
-  margin-top: 0.5rem;
+.suggestion-chip:hover {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(30, 215, 96, 0.3);
 }
 
 /* Responsive Design */
 @media (max-width: 768px) {
-  .search-form {
-    flex-direction: column;
+  .search-header h2 {
+    font-size: 2rem;
   }
 
-  .search-btn {
-    width: 100%;
+  .search-subtitle {
+    font-size: 1rem;
+  }
+
+  .search-input-wrapper {
+    padding: 0.625rem 1.25rem;
   }
 
   .search-input {
-    padding: 0.75rem 2.5rem 0.75rem 2.5rem;
-    font-size: 0.95rem;
+    font-size: 1rem;
   }
 
   .search-icon {
-    left: 0.875rem;
-    font-size: 1.1rem;
+    font-size: 1.25rem;
+    margin-right: 0.75rem;
   }
 
-  .clear-btn {
-    right: 0.875rem;
-    font-size: 1.1rem;
+  .empty-icon {
+    font-size: 4rem;
   }
 
-  .results-header {
-    font-size: 1.1rem;
+  .search-empty h3 {
+    font-size: 1.5rem;
   }
 
-  .search-placeholder-icon {
-    font-size: 3rem;
+  .search-empty > p {
+    font-size: 1rem;
   }
 
-  .search-placeholder p {
-    font-size: 1.1rem;
+  .suggestion-chips {
+    gap: 0.75rem;
+  }
+
+  .suggestion-chip {
+    padding: 0.625rem 1.25rem;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .search-header h2 {
+    font-size: 1.75rem;
+  }
+
+  .search-input-wrapper {
+    padding: 0.5rem 1rem;
+  }
+
+  .search-input {
+    font-size: 0.95rem;
+  }
+
+  .suggestion-chip {
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
   }
 }
