@@ -13,21 +13,86 @@
   justify-content: space-between;
   align-items: center;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  gap: 2rem;
 }
 
 .app-header h1 {
   font-size: 1.5rem;
   font-weight: 700;
+  white-space: nowrap;
 }
 
 .app-header nav {
   display: flex;
   gap: 2rem;
+  flex: 1;
 }
 
 .app-header nav a {
   font-weight: 500;
   transition: color 0.2s;
+  white-space: nowrap;
+}
+
+.auth-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.user-email {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.signout-btn {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: var(--text-color);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.signout-btn:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.login-link,
+.signup-link {
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.login-link {
+  color: var(--text-color);
+}
+
+.login-link:hover {
+  color: var(--primary-color);
+}
+
+.signup-link {
+  background-color: var(--primary-color);
+  color: var(--text-color);
+}
+
+.signup-link:hover {
+  background-color: #1ed760;
+  transform: scale(1.05);
 }
 
 .app-main {
@@ -70,55 +135,6 @@
   font-size: 1.1rem;
 }
 
-/* Audio Player Styles */
-.audio-player {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background-color: var(--surface);
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 1rem 2rem;
-}
-
-.player-placeholder {
-  text-align: center;
-}
-
-.player-controls {
-  display: flex;
-  justify-content: center;
-  gap: 1rem;
-  margin: 1rem 0;
-}
-
-.player-controls button {
-  font-size: 1.5rem;
-  padding: 0.5rem 1rem;
-  background-color: var(--primary-color);
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.player-progress {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  max-width: 600px;
-  margin: 0 auto;
-}
-
-.progress-bar {
-  flex: 1;
-  height: 4px;
-  background-color: rgba(255, 255, 255, 0.3);
-  border-radius: 2px;
-}
-
 /* Animations */
 @keyframes fadeIn {
   from {
@@ -132,14 +148,47 @@
 }
 
 /* Responsive Design */
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .app-header {
-    flex-direction: column;
     gap: 1rem;
   }
 
   .app-header nav {
+    gap: 1.5rem;
+  }
+
+  .user-email {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .app-header {
+    flex-wrap: wrap;
+    padding: 1rem;
+  }
+
+  .app-header h1 {
+    font-size: 1.25rem;
+  }
+
+  .app-header nav {
+    order: 3;
+    width: 100%;
+    justify-content: center;
     gap: 1rem;
+    margin-top: 0.5rem;
+  }
+
+  .auth-actions {
+    gap: 0.5rem;
+  }
+
+  .signout-btn,
+  .login-link,
+  .signup-link {
+    padding: 0.4rem 0.875rem;
+    font-size: 0.85rem;
   }
 
   .app-main {
