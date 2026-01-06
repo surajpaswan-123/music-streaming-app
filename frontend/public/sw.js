@@ -1,5 +1,5 @@
 // Service Worker for Music Streaming App PWA
-// Version 1.0.0
+// Version 1.0.1
 
 const CACHE_NAME = 'music-streaming-v1';
 const RUNTIME_CACHE = 'music-streaming-runtime-v1';
@@ -9,8 +9,7 @@ const PRECACHE_ASSETS = [
   '/',
   '/index.html',
   '/manifest.json',
-  '/icons/icon-192x192.png',
-  '/icons/icon-512x512.png'
+  '/icons/logo.png'
 ];
 
 // Install event - cache essential assets
