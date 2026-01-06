@@ -25,9 +25,20 @@ function Home() {
       setLoading(true);
       setError(null);
 
-      // Fetch all songs
-      const response = await fetchSongs();
-      const allSongs = response.data || [];
+      console.log('🎵 Home: Loading songs...');
+
+      // Fetch all songs - fetchSongs() returns data directly, not { data: [...] }
+      const allSongs = await fetchSongs();
+      
+      console.log('🎵 Home: Received songs:', allSongs);
+      console.log('🎵 Home: Songs count:', allSongs?.length || 0);
+
+      // Validate data
+      if (!Array.isArray(allSongs)) {
+        console.error('❌ Home: fetchSongs() did not return an array:', allSongs);
+        throw new Error('Invalid data format received from fetchSongs()');
+      }
+
       setSongs(allSongs);
 
       // Get recently played
@@ -38,25 +49,29 @@ function Home() {
       if (user) {
         try {
           const token = await getAccessToken();
-          const likedResponse = await getLikedSongs(token);
-          const likedData = likedResponse.data || [];
+          const likedSongs = await getLikedSongs(token);
           
+          console.log('❤️ Home: Liked songs:', likedSongs);
+
+          // Validate liked songs data
+          const likedData = Array.isArray(likedSongs) ? likedSongs : [];
+
           // Map liked song IDs to full song objects
-          const likedSongs = likedData
+          const likedSongObjects = likedData
             .map(liked => allSongs.find(song => song.id === liked.song_id))
             .filter(Boolean);
 
           // Get recommendations
           const recommended = getRecommendations(
             allSongs,
-            likedSongs,
+            likedSongObjects,
             currentSong,
             recent
           );
           setRecommendedSongs(recommended);
         } catch (err) {
-          console.error('Failed to load recommendations:', err);
-          // Continue without recommendations
+          console.error('⚠️ Home: Failed to load recommendations:', err);
+          // Continue without recommendations - not critical
         }
       } else {
         // For non-logged in users, show random songs as recommendations
@@ -64,9 +79,11 @@ function Home() {
         setRecommendedSongs(shuffled.slice(0, 6));
       }
 
+      console.log('✅ Home: Songs loaded successfully');
+
     } catch (err) {
-      console.error('Failed to load songs:', err);
-      setError('Failed to load songs. Please try again.');
+      console.error('❌ Home: Failed to load songs:', err);
+      setError(err.message || 'Failed to load songs. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -162,7 +179,7 @@ function Home() {
         </div>
         {songs.length === 0 ? (
           <div className="empty-state">
-            <p>No songs available</p>
+            <p>No songs available yet. Check back soon!</p>
           </div>
         ) : (
           <div className="songs-grid">
