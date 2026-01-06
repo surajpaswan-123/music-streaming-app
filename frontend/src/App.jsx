@@ -3,6 +3,7 @@ import { AuthProvider } from './context/AuthContext';
 import { PlayerProvider } from './context/PlayerContext';
 import { useAuth } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import InstallPopup from './components/InstallPopup';
 import Home from './pages/Home';
 import Search from './pages/Search';
 import Library from './pages/Library';
@@ -51,6 +52,9 @@ function AppRoutes() {
   return (
     <div className="app">
       <Navigation />
+      
+      {/* PWA Install Popup */}
+      <InstallPopup />
       
       <main className="app-main">
         <Routes>
