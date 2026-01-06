@@ -11,17 +11,18 @@ console.log('Anon Key:', supabaseAnonKey ? '✅ Set' : '❌ Missing');
 if (!supabaseUrl || !supabaseAnonKey) {
   console.error('❌ Missing Supabase configuration. Please check your environment variables.');
   console.error('Required: VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY');
-  console.error('Current values:', { supabaseUrl, supabaseAnonKey: supabaseAnonKey ? 'exists' : 'missing' });
+  throw new Error('Supabase configuration is missing. Cannot initialize client.');
 }
 
-export const supabase = supabaseUrl && supabaseAnonKey 
-  ? createClient(supabaseUrl, supabaseAnonKey, {
-      auth: {
-        autoRefreshToken: true,
-        persistSession: true,
-        detectSessionInUrl: true
-      }
-    })
-  : null;
+// Always create client - fail fast if config is wrong
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: true
+  }
+});
+
+console.log('✅ Supabase client initialized successfully');
 
 export default supabase;
