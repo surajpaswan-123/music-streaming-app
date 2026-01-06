@@ -25,31 +25,54 @@ function Library() {
       setLoading(true);
       setError(null);
       
+      console.log('📚 Library: Loading library data...');
+      
       const token = await getAccessToken();
       
-      // Load all songs first
-      const songsResponse = await fetchSongs();
-      const songs = songsResponse.data || [];
+      // Load all songs first - fetchSongs() returns array directly
+      const songs = await fetchSongs();
+      
+      console.log('📚 Library: All songs:', songs);
+      console.log('📚 Library: Songs count:', songs?.length || 0);
+
+      // Validate data
+      if (!Array.isArray(songs)) {
+        console.error('❌ Library: fetchSongs() did not return an array:', songs);
+        throw new Error('Invalid data format received from fetchSongs()');
+      }
+
       setAllSongs(songs);
       
-      // Load liked songs
-      const likedResponse = await getLikedSongs(token);
-      const likedData = likedResponse.data || [];
+      // Load liked songs - getLikedSongs() returns array directly
+      const likedData = await getLikedSongs(token);
+      
+      console.log('❤️ Library: Liked songs data:', likedData);
+
+      // Validate liked data
+      const likedArray = Array.isArray(likedData) ? likedData : [];
       
       // Map liked song IDs to full song objects
-      const likedSongObjects = likedData
+      const likedSongObjects = likedArray
         .map(liked => songs.find(song => song.id === liked.song_id))
         .filter(Boolean);
       
+      console.log('❤️ Library: Liked song objects:', likedSongObjects);
       setLikedSongs(likedSongObjects);
       
-      // Load playlists
-      const playlistsResponse = await getPlaylists(token);
-      setPlaylists(playlistsResponse.data || []);
+      // Load playlists - getPlaylists() returns array directly
+      const playlistsData = await getPlaylists(token);
+      
+      console.log('📚 Library: Playlists:', playlistsData);
+
+      // Validate playlists data
+      const playlistsArray = Array.isArray(playlistsData) ? playlistsData : [];
+      setPlaylists(playlistsArray);
+
+      console.log('✅ Library: Library data loaded successfully');
       
     } catch (err) {
-      console.error('Failed to load library:', err);
-      setError('Failed to load library. Please try again.');
+      console.error('❌ Library: Failed to load library:', err);
+      setError(err.message || 'Failed to load library. Please try again.');
     } finally {
       setLoading(false);
     }
