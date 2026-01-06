@@ -71,13 +71,15 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
-  console.log(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`🎵 Songs API: http://localhost:${PORT}/api/songs`);
-  console.log(`❤️  Library API: http://localhost:${PORT}/api/library`);
-  console.log(`📚 Playlists API: http://localhost:${PORT}/api/playlists`);
-});
+// Only start server if not in Vercel serverless environment
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(PORT, () => {
+    console.log(`🚀 Server running on http://localhost:${PORT}`);
+    console.log(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`🎵 Songs API: http://localhost:${PORT}/api/songs`);
+    console.log(`❤️  Library API: http://localhost:${PORT}/api/library`);
+    console.log(`📚 Playlists API: http://localhost:${PORT}/api/playlists`);
+  });
+}
 
 export default app;
