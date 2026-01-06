@@ -9,6 +9,13 @@ export default defineConfig({
     outDir: 'dist',
     assetsDir: 'assets',
     sourcemap: false,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'react-router-dom'],
+        }
+      }
+    }
   },
   server: {
     port: 5173,
@@ -19,5 +26,7 @@ export default defineConfig({
         changeOrigin: true,
       }
     }
-  }
+  },
+  // Ensure public files are copied correctly
+  publicDir: 'public'
 })
