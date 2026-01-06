@@ -1,182 +1,479 @@
 /**
- * API Service Layer
- * Handles all API calls to the backend
+ * API Service Layer - Direct Supabase Integration
+ * No backend server needed - uses Supabase JS client directly
  */
 
-// Use environment variable or fallback to localhost for development
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
+import { supabase } from '../config/supabase.js';
 
 /**
- * Get access token from Supabase
+ * Get current user session
  */
-const getAuthToken = async () => {
-  // This will be set by AuthContext
-  const token = localStorage.getItem('supabase.auth.token');
-  return token;
+const getCurrentUser = async () => {
+  const { data: { session } } = await supabase.auth.getSession();
+  return session?.user || null;
 };
 
 /**
- * Generic fetch wrapper with error handling and auth
- */
-async function fetchAPI(endpoint, options = {}) {
-  try {
-    // Get auth token if available
-    const token = options.token || await getAuthToken();
-    
-    const headers = {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    };
-    
-    // Add auth header if token exists
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-    
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-      ...options,
-      headers,
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || `API Error: ${response.status} ${response.statusText}`);
-    }
-
-    return await response.json();
-  } catch (error) {
-    console.error('API call failed:', error);
-    throw error;
-  }
-}
-
-/**
- * Health check
- */
-export async function checkHealth() {
-  return fetchAPI('/health');
-}
-
-/**
- * Get all songs
+ * Get all songs from Supabase
  */
 export async function fetchSongs() {
-  return fetchAPI('/songs');
+  try {
+    console.log('📡 Fetching songs from Supabase...');
+    
+    const { data, error } = await supabase
+      .from('songs')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('❌ Supabase error fetching songs:', error);
+      throw new Error(error.message);
+    }
+
+    if (!data || data.length === 0) {
+      console.warn('⚠️ No songs found in database');
+      return [];
+    }
+
+    console.log(`✅ Successfully fetched ${data.length} songs`);
+    return data;
+  } catch (error) {
+    console.error('❌ Failed to fetch songs:', error);
+    throw error;
+  }
 }
 
 /**
  * Get single song by ID
  */
 export async function fetchSongById(id) {
-  return fetchAPI(`/songs/${id}`);
+  try {
+    console.log(`📡 Fetching song ${id} from Supabase...`);
+    
+    const { data, error } = await supabase
+      .from('songs')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error) {
+      console.error('❌ Supabase error fetching song:', error);
+      throw new Error(error.message);
+    }
+
+    console.log('✅ Successfully fetched song:', data);
+    return data;
+  } catch (error) {
+    console.error('❌ Failed to fetch song:', error);
+    throw error;
+  }
 }
 
 /**
- * Search songs
+ * Search songs by title or artist
  */
 export async function searchSongs(query) {
-  return fetchAPI(`/songs/search?q=${encodeURIComponent(query)}`);
+  try {
+    console.log(`🔍 Searching songs for: "${query}"`);
+    
+    const { data, error } = await supabase
+      .from('songs')
+      .select('*')
+      .or(`title.ilike.%${query}%,artist.ilike.%${query}%`)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('❌ Supabase error searching songs:', error);
+      throw new Error(error.message);
+    }
+
+    console.log(`✅ Found ${data?.length || 0} songs matching "${query}"`);
+    return data || [];
+  } catch (error) {
+    console.error('❌ Failed to search songs:', error);
+    throw error;
+  }
 }
 
 /**
- * Get liked songs
+ * Get liked songs for current user
  */
-export async function getLikedSongs(token) {
-  return fetchAPI('/library/liked', { token });
+export async function getLikedSongs() {
+  try {
+    const user = await getCurrentUser();
+    if (!user) {
+      console.warn('⚠️ No user logged in');
+      return [];
+    }
+
+    console.log('📡 Fetching liked songs...');
+    
+    const { data, error } = await supabase
+      .from('liked_songs')
+      .select(`
+        *,
+        songs (*)
+      `)
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('❌ Supabase error fetching liked songs:', error);
+      throw new Error(error.message);
+    }
+
+    const songs = data?.map(item => item.songs) || [];
+    console.log(`✅ Found ${songs.length} liked songs`);
+    return songs;
+  } catch (error) {
+    console.error('❌ Failed to fetch liked songs:', error);
+    throw error;
+  }
 }
 
 /**
  * Like a song
  */
-export async function likeSong(songId, token) {
-  return fetchAPI(`/library/like/${songId}`, {
-    method: 'POST',
-    token
-  });
+export async function likeSong(songId) {
+  try {
+    const user = await getCurrentUser();
+    if (!user) {
+      throw new Error('You must be logged in to like songs');
+    }
+
+    console.log(`❤️ Liking song ${songId}...`);
+    
+    const { error } = await supabase
+      .from('liked_songs')
+      .insert({
+        user_id: user.id,
+        song_id: songId
+      });
+
+    if (error) {
+      console.error('❌ Supabase error liking song:', error);
+      throw new Error(error.message);
+    }
+
+    console.log('✅ Song liked successfully');
+    return { success: true };
+  } catch (error) {
+    console.error('❌ Failed to like song:', error);
+    throw error;
+  }
 }
 
 /**
  * Unlike a song
  */
-export async function unlikeSong(songId, token) {
-  return fetchAPI(`/library/unlike/${songId}`, {
-    method: 'DELETE',
-    token
-  });
+export async function unlikeSong(songId) {
+  try {
+    const user = await getCurrentUser();
+    if (!user) {
+      throw new Error('You must be logged in to unlike songs');
+    }
+
+    console.log(`💔 Unliking song ${songId}...`);
+    
+    const { error } = await supabase
+      .from('liked_songs')
+      .delete()
+      .eq('user_id', user.id)
+      .eq('song_id', songId);
+
+    if (error) {
+      console.error('❌ Supabase error unliking song:', error);
+      throw new Error(error.message);
+    }
+
+    console.log('✅ Song unliked successfully');
+    return { success: true };
+  } catch (error) {
+    console.error('❌ Failed to unlike song:', error);
+    throw error;
+  }
 }
 
 /**
- * Check if song is liked
+ * Check if song is liked by current user
  */
-export async function checkIsLiked(songId, token) {
-  return fetchAPI(`/library/is-liked/${songId}`, { token });
+export async function checkIsLiked(songId) {
+  try {
+    const user = await getCurrentUser();
+    if (!user) {
+      return false;
+    }
+
+    const { data, error } = await supabase
+      .from('liked_songs')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('song_id', songId)
+      .single();
+
+    if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
+      console.error('❌ Supabase error checking liked status:', error);
+      return false;
+    }
+
+    return !!data;
+  } catch (error) {
+    console.error('❌ Failed to check liked status:', error);
+    return false;
+  }
 }
 
 /**
  * Get user's playlists
  */
-export async function getPlaylists(token) {
-  return fetchAPI('/playlists', { token });
+export async function getPlaylists() {
+  try {
+    const user = await getCurrentUser();
+    if (!user) {
+      console.warn('⚠️ No user logged in');
+      return [];
+    }
+
+    console.log('📡 Fetching playlists...');
+    
+    const { data, error } = await supabase
+      .from('playlists')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('❌ Supabase error fetching playlists:', error);
+      throw new Error(error.message);
+    }
+
+    console.log(`✅ Found ${data?.length || 0} playlists`);
+    return data || [];
+  } catch (error) {
+    console.error('❌ Failed to fetch playlists:', error);
+    throw error;
+  }
 }
 
 /**
  * Get single playlist with songs
  */
-export async function getPlaylist(playlistId, token) {
-  return fetchAPI(`/playlists/${playlistId}`, { token });
+export async function getPlaylist(playlistId) {
+  try {
+    const user = await getCurrentUser();
+    if (!user) {
+      throw new Error('You must be logged in to view playlists');
+    }
+
+    console.log(`📡 Fetching playlist ${playlistId}...`);
+    
+    const { data, error } = await supabase
+      .from('playlists')
+      .select(`
+        *,
+        playlist_songs (
+          *,
+          songs (*)
+        )
+      `)
+      .eq('id', playlistId)
+      .eq('user_id', user.id)
+      .single();
+
+    if (error) {
+      console.error('❌ Supabase error fetching playlist:', error);
+      throw new Error(error.message);
+    }
+
+    console.log('✅ Successfully fetched playlist');
+    return data;
+  } catch (error) {
+    console.error('❌ Failed to fetch playlist:', error);
+    throw error;
+  }
 }
 
 /**
  * Create new playlist
  */
-export async function createPlaylist(name, description, token) {
-  return fetchAPI('/playlists', {
-    method: 'POST',
-    body: JSON.stringify({ name, description }),
-    token
-  });
+export async function createPlaylist(name, description = '') {
+  try {
+    const user = await getCurrentUser();
+    if (!user) {
+      throw new Error('You must be logged in to create playlists');
+    }
+
+    console.log(`📝 Creating playlist "${name}"...`);
+    
+    const { data, error } = await supabase
+      .from('playlists')
+      .insert({
+        user_id: user.id,
+        name,
+        description
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('❌ Supabase error creating playlist:', error);
+      throw new Error(error.message);
+    }
+
+    console.log('✅ Playlist created successfully');
+    return data;
+  } catch (error) {
+    console.error('❌ Failed to create playlist:', error);
+    throw error;
+  }
 }
 
 /**
  * Update playlist
  */
-export async function updatePlaylist(playlistId, name, description, token) {
-  return fetchAPI(`/playlists/${playlistId}`, {
-    method: 'PUT',
-    body: JSON.stringify({ name, description }),
-    token
-  });
+export async function updatePlaylist(playlistId, name, description) {
+  try {
+    const user = await getCurrentUser();
+    if (!user) {
+      throw new Error('You must be logged in to update playlists');
+    }
+
+    console.log(`📝 Updating playlist ${playlistId}...`);
+    
+    const { data, error } = await supabase
+      .from('playlists')
+      .update({ name, description })
+      .eq('id', playlistId)
+      .eq('user_id', user.id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('❌ Supabase error updating playlist:', error);
+      throw new Error(error.message);
+    }
+
+    console.log('✅ Playlist updated successfully');
+    return data;
+  } catch (error) {
+    console.error('❌ Failed to update playlist:', error);
+    throw error;
+  }
 }
 
 /**
  * Delete playlist
  */
-export async function deletePlaylist(playlistId, token) {
-  return fetchAPI(`/playlists/${playlistId}`, {
-    method: 'DELETE',
-    token
-  });
+export async function deletePlaylist(playlistId) {
+  try {
+    const user = await getCurrentUser();
+    if (!user) {
+      throw new Error('You must be logged in to delete playlists');
+    }
+
+    console.log(`🗑️ Deleting playlist ${playlistId}...`);
+    
+    const { error } = await supabase
+      .from('playlists')
+      .delete()
+      .eq('id', playlistId)
+      .eq('user_id', user.id);
+
+    if (error) {
+      console.error('❌ Supabase error deleting playlist:', error);
+      throw new Error(error.message);
+    }
+
+    console.log('✅ Playlist deleted successfully');
+    return { success: true };
+  } catch (error) {
+    console.error('❌ Failed to delete playlist:', error);
+    throw error;
+  }
 }
 
 /**
  * Add song to playlist
  */
-export async function addSongToPlaylist(playlistId, songId, token) {
-  return fetchAPI(`/playlists/${playlistId}/songs`, {
-    method: 'POST',
-    body: JSON.stringify({ songId }),
-    token
-  });
+export async function addSongToPlaylist(playlistId, songId) {
+  try {
+    const user = await getCurrentUser();
+    if (!user) {
+      throw new Error('You must be logged in to add songs to playlists');
+    }
+
+    console.log(`➕ Adding song ${songId} to playlist ${playlistId}...`);
+    
+    const { error } = await supabase
+      .from('playlist_songs')
+      .insert({
+        playlist_id: playlistId,
+        song_id: songId
+      });
+
+    if (error) {
+      console.error('❌ Supabase error adding song to playlist:', error);
+      throw new Error(error.message);
+    }
+
+    console.log('✅ Song added to playlist successfully');
+    return { success: true };
+  } catch (error) {
+    console.error('❌ Failed to add song to playlist:', error);
+    throw error;
+  }
 }
 
 /**
  * Remove song from playlist
  */
-export async function removeSongFromPlaylist(playlistId, songId, token) {
-  return fetchAPI(`/playlists/${playlistId}/songs/${songId}`, {
-    method: 'DELETE',
-    token
-  });
+export async function removeSongFromPlaylist(playlistId, songId) {
+  try {
+    const user = await getCurrentUser();
+    if (!user) {
+      throw new Error('You must be logged in to remove songs from playlists');
+    }
+
+    console.log(`➖ Removing song ${songId} from playlist ${playlistId}...`);
+    
+    const { error } = await supabase
+      .from('playlist_songs')
+      .delete()
+      .eq('playlist_id', playlistId)
+      .eq('song_id', songId);
+
+    if (error) {
+      console.error('❌ Supabase error removing song from playlist:', error);
+      throw new Error(error.message);
+    }
+
+    console.log('✅ Song removed from playlist successfully');
+    return { success: true };
+  } catch (error) {
+    console.error('❌ Failed to remove song from playlist:', error);
+    throw error;
+  }
+}
+
+// Health check - verify Supabase connection
+export async function checkHealth() {
+  try {
+    const { data, error } = await supabase
+      .from('songs')
+      .select('count')
+      .limit(1);
+
+    if (error) {
+      console.error('❌ Health check failed:', error);
+      return { status: 'error', message: error.message };
+    }
+
+    console.log('✅ Health check passed');
+    return { status: 'ok', message: 'Supabase connection healthy' };
+  } catch (error) {
+    console.error('❌ Health check failed:', error);
+    return { status: 'error', message: error.message };
+  }
 }
 
 export default {
