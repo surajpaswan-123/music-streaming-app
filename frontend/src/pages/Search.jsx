@@ -44,11 +44,26 @@ function Search() {
       setError(null);
       setHasSearched(true);
 
-      const response = await searchSongs(searchQuery);
-      setResults(response.data || []);
+      console.log('🔍 Search: Searching for:', searchQuery);
+
+      // searchSongs() returns array directly, not { data: [...] }
+      const searchResults = await searchSongs(searchQuery);
+      
+      console.log('🔍 Search: Results:', searchResults);
+      console.log('🔍 Search: Results count:', searchResults?.length || 0);
+
+      // Validate data
+      if (!Array.isArray(searchResults)) {
+        console.error('❌ Search: searchSongs() did not return an array:', searchResults);
+        throw new Error('Invalid data format received from searchSongs()');
+      }
+
+      setResults(searchResults);
+      console.log('✅ Search: Search completed successfully');
+
     } catch (err) {
-      console.error('Search failed:', err);
-      setError('Failed to search songs. Please try again.');
+      console.error('❌ Search: Search failed:', err);
+      setError(err.message || 'Failed to search songs. Please try again.');
       setResults([]);
     } finally {
       setLoading(false);
