@@ -1,5 +1,5 @@
 // Service Worker for Music Streaming App PWA
-// Version 1.0.1
+// Version 1.0.2 - Silent updates, no forced activation
 
 const CACHE_NAME = 'music-streaming-v1';
 const RUNTIME_CACHE = 'music-streaming-runtime-v1';
@@ -14,28 +14,24 @@ const PRECACHE_ASSETS = [
 
 // Install event - cache essential assets
 self.addEventListener('install', (event) => {
-  console.log('🔧 Service Worker: Installing...');
-  
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
-        console.log('📦 Service Worker: Caching app shell');
         return cache.addAll(PRECACHE_ASSETS);
       })
       .then(() => {
-        console.log('✅ Service Worker: Installation complete');
-        return self.skipWaiting(); // Activate immediately
+        // DO NOT call skipWaiting() here
+        // Let the new service worker wait until all tabs are closed
+        // This prevents "update available" popups
       })
       .catch((error) => {
-        console.error('❌ Service Worker: Installation failed', error);
+        console.error('Service Worker: Installation failed', error);
       })
   );
 });
 
 // Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
-  console.log('🚀 Service Worker: Activating...');
-  
   event.waitUntil(
     caches.keys()
       .then((cacheNames) => {
@@ -46,14 +42,14 @@ self.addEventListener('activate', (event) => {
               return cacheName !== CACHE_NAME && cacheName !== RUNTIME_CACHE;
             })
             .map((cacheName) => {
-              console.log('🗑️ Service Worker: Deleting old cache:', cacheName);
               return caches.delete(cacheName);
             })
         );
       })
       .then(() => {
-        console.log('✅ Service Worker: Activation complete');
-        return self.clients.claim(); // Take control immediately
+        // DO NOT call clients.claim() here
+        // This prevents taking control of existing pages
+        // New service worker will activate on next page load
       })
   );
 });
@@ -105,7 +101,6 @@ self.addEventListener('fetch', (event) => {
     caches.match(request)
       .then((cachedResponse) => {
         if (cachedResponse) {
-          console.log('📦 Service Worker: Serving from cache:', request.url);
           return cachedResponse;
         }
 
@@ -129,8 +124,6 @@ self.addEventListener('fetch', (event) => {
             return response;
           })
           .catch((error) => {
-            console.error('❌ Service Worker: Fetch failed', error);
-            
             // Return offline page if available
             return caches.match('/offline.html');
           });
@@ -139,17 +132,15 @@ self.addEventListener('fetch', (event) => {
 });
 
 // Handle messages from clients
+// Only skip waiting if explicitly requested by user action
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
-    console.log('⏭️ Service Worker: Skip waiting requested');
     self.skipWaiting();
   }
 });
 
-// Background sync for offline actions (future enhancement)
+// Background sync for offline actions
 self.addEventListener('sync', (event) => {
-  console.log('🔄 Service Worker: Background sync triggered', event.tag);
-  
   if (event.tag === 'sync-likes') {
     event.waitUntil(syncLikes());
   }
@@ -157,7 +148,4 @@ self.addEventListener('sync', (event) => {
 
 async function syncLikes() {
   // Placeholder for syncing liked songs when back online
-  console.log('❤️ Service Worker: Syncing likes...');
 }
-
-console.log('🎵 Music Streaming App Service Worker loaded');
