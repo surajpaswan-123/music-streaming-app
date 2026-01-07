@@ -46,6 +46,12 @@
   box-shadow: 0 4px 12px rgba(30, 215, 96, 0.3);
 }
 
+/* Banner Section - Data-Driven */
+.banner-section {
+  margin-bottom: 3rem;
+  animation: fadeIn 0.5s ease-in;
+}
+
 /* Music Sections */
 .music-section {
   margin-bottom: 3rem;
