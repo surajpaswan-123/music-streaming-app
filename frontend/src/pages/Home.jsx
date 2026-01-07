@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { usePlayer } from '../context/PlayerContext';
 import SongCard from '../components/SongCard';
 import SongBanner from '../components/SongBanner';
+import { supabase } from '../config/supabase';
 import './Home.css';
 
 function Home() {
@@ -19,6 +20,36 @@ function Home() {
 
   useEffect(() => {
     loadSongs();
+
+    // 🔥 REAL-TIME LISTENER - Auto-refresh on Supabase changes
+    console.log('🔄 Setting up real-time listener for songs table...');
+    
+    const channel = supabase
+      .channel('songs-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*', // Listen to all events (INSERT, UPDATE, DELETE)
+          schema: 'public',
+          table: 'songs'
+        },
+        (payload) => {
+          console.log('🔥 Real-time update detected:', payload);
+          console.log('🔄 Reloading songs automatically...');
+          
+          // Reload songs when any change happens
+          loadSongs();
+        }
+      )
+      .subscribe((status) => {
+        console.log('📡 Real-time subscription status:', status);
+      });
+
+    // Cleanup on unmount
+    return () => {
+      console.log('🔌 Unsubscribing from real-time updates...');
+      supabase.removeChannel(channel);
+    };
   }, [user]);
 
   const loadSongs = async () => {
@@ -144,7 +175,7 @@ function Home() {
         )}
       </div>
 
-      {/* Banner Section - Data-Driven */}
+      {/* Banner Section - Data-Driven with Real-time Updates */}
       {songsWithBanners.length > 0 && (
         <section className="banner-section">
           {songsWithBanners.map(song => (
