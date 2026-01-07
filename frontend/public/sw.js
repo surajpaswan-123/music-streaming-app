@@ -1,5 +1,5 @@
 // Service Worker for Music Streaming App PWA
-// Version 1.0.2 - Silent updates, no forced activation
+// Version 1.0.3 - Production-ready with error handling
 
 const CACHE_NAME = 'music-streaming-v1';
 const RUNTIME_CACHE = 'music-streaming-runtime-v1';
@@ -8,20 +8,26 @@ const RUNTIME_CACHE = 'music-streaming-runtime-v1';
 const PRECACHE_ASSETS = [
   '/',
   '/index.html',
-  '/manifest.json',
-  '/icons/logo.png'
+  '/manifest.json'
 ];
 
-// Install event - cache essential assets
+// Install event - cache essential assets with error handling
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
-        return cache.addAll(PRECACHE_ASSETS);
+        // Try to cache each asset individually to avoid all-or-nothing failure
+        return Promise.allSettled(
+          PRECACHE_ASSETS.map(url => 
+            cache.add(url).catch(err => {
+              console.warn(`Failed to cache ${url}:`, err);
+              return null;
+            })
+          )
+        );
       })
       .then(() => {
-        // DO NOT call skipWaiting() here
-        // Let the new service worker wait until all tabs are closed
+        // Don't call skipWaiting() - let new SW wait
         // This prevents "update available" popups
       })
       .catch((error) => {
@@ -38,7 +44,6 @@ self.addEventListener('activate', (event) => {
         return Promise.all(
           cacheNames
             .filter((cacheName) => {
-              // Delete old caches
               return cacheName !== CACHE_NAME && cacheName !== RUNTIME_CACHE;
             })
             .map((cacheName) => {
@@ -47,9 +52,8 @@ self.addEventListener('activate', (event) => {
         );
       })
       .then(() => {
-        // DO NOT call clients.claim() here
-        // This prevents taking control of existing pages
-        // New service worker will activate on next page load
+        // Don't call clients.claim() - prevents taking control immediately
+        // New SW will control on next page load
       })
   );
 });
@@ -57,82 +61,82 @@ self.addEventListener('activate', (event) => {
 // Fetch event - serve from cache, fallback to network
 self.addEventListener('fetch', (event) => {
   const { request } = event;
-  const url = new URL(request.url);
+  
+  // Only handle same-origin requests
+  try {
+    const url = new URL(request.url);
+    
+    // Skip cross-origin requests
+    if (url.origin !== location.origin) {
+      return;
+    }
 
-  // Skip cross-origin requests
-  if (url.origin !== location.origin) {
-    return;
-  }
+    // Skip Supabase API requests (always fetch fresh)
+    if (url.hostname.includes('supabase.co')) {
+      return;
+    }
 
-  // Skip Supabase API requests (always fetch fresh)
-  if (url.hostname.includes('supabase.co')) {
-    return;
-  }
+    // Skip audio streaming (don't cache large files)
+    if (request.destination === 'audio' || request.url.includes('/storage/v1/object/')) {
+      return;
+    }
 
-  // Skip audio streaming (don't cache large files)
-  if (request.destination === 'audio' || request.url.includes('/storage/v1/object/')) {
-    return;
-  }
-
-  // Network-first strategy for API calls
-  if (url.pathname.startsWith('/api/')) {
-    event.respondWith(
-      fetch(request)
-        .then((response) => {
-          // Cache successful responses
-          if (response.status === 200) {
-            const responseClone = response.clone();
-            caches.open(RUNTIME_CACHE).then((cache) => {
-              cache.put(request, responseClone);
-            });
-          }
-          return response;
-        })
-        .catch(() => {
-          // Fallback to cache if network fails
-          return caches.match(request);
-        })
-    );
-    return;
-  }
-
-  // Cache-first strategy for static assets
-  event.respondWith(
-    caches.match(request)
-      .then((cachedResponse) => {
-        if (cachedResponse) {
-          return cachedResponse;
-        }
-
-        // Not in cache, fetch from network
-        return fetch(request)
+    // Network-first strategy for API calls
+    if (url.pathname.startsWith('/api/')) {
+      event.respondWith(
+        fetch(request)
           .then((response) => {
-            // Don't cache non-successful responses
-            if (!response || response.status !== 200 || response.type === 'error') {
-              return response;
-            }
-
-            // Clone the response
-            const responseClone = response.clone();
-
-            // Cache the fetched response
-            caches.open(RUNTIME_CACHE)
-              .then((cache) => {
-                cache.put(request, responseClone);
+            if (response && response.status === 200) {
+              const responseClone = response.clone();
+              caches.open(RUNTIME_CACHE).then((cache) => {
+                cache.put(request, responseClone).catch(() => {});
               });
-
+            }
             return response;
           })
-          .catch((error) => {
-            // Return offline page if available
-            return caches.match('/offline.html');
-          });
-      })
-  );
+          .catch(() => {
+            return caches.match(request);
+          })
+      );
+      return;
+    }
+
+    // Cache-first strategy for static assets
+    event.respondWith(
+      caches.match(request)
+        .then((cachedResponse) => {
+          if (cachedResponse) {
+            return cachedResponse;
+          }
+
+          return fetch(request)
+            .then((response) => {
+              if (!response || response.status !== 200 || response.type === 'error') {
+                return response;
+              }
+
+              const responseClone = response.clone();
+              caches.open(RUNTIME_CACHE)
+                .then((cache) => {
+                  cache.put(request, responseClone).catch(() => {});
+                });
+
+              return response;
+            })
+            .catch(() => {
+              return caches.match('/offline.html').catch(() => {
+                return new Response('Offline', { status: 503 });
+              });
+            });
+        })
+    );
+  } catch (error) {
+    // Invalid URL - just fetch normally
+    event.respondWith(fetch(request));
+  }
 });
 
 // Handle messages from clients
-// Only skip waiting if explicitly requested by user action
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
