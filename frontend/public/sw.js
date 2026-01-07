@@ -1,43 +1,52 @@
 // Service Worker for Music Streaming App PWA
-// Version 1.0.3 - Production-ready with error handling
+// Version 1.0.4 - Production-ready with proper icon handling
 
 const CACHE_NAME = 'music-streaming-v1';
 const RUNTIME_CACHE = 'music-streaming-runtime-v1';
 
-// Assets to cache on install
+// Assets to cache on install (only essential files that exist)
 const PRECACHE_ASSETS = [
   '/',
   '/index.html',
-  '/manifest.json'
+  '/manifest.json',
+  '/icon.svg'
 ];
 
 // Install event - cache essential assets with error handling
 self.addEventListener('install', (event) => {
+  console.log('[SW] Installing service worker...');
+  
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
+        console.log('[SW] Caching essential assets...');
         // Try to cache each asset individually to avoid all-or-nothing failure
         return Promise.allSettled(
           PRECACHE_ASSETS.map(url => 
-            cache.add(url).catch(err => {
-              console.warn(`Failed to cache ${url}:`, err);
-              return null;
-            })
+            cache.add(url)
+              .then(() => console.log(`[SW] Cached: ${url}`))
+              .catch(err => {
+                console.warn(`[SW] Failed to cache ${url}:`, err);
+                return null;
+              })
           )
         );
       })
       .then(() => {
+        console.log('[SW] Installation complete');
         // Don't call skipWaiting() - let new SW wait
         // This prevents "update available" popups
       })
       .catch((error) => {
-        console.error('Service Worker: Installation failed', error);
+        console.error('[SW] Installation failed:', error);
       })
   );
 });
 
 // Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
+  console.log('[SW] Activating service worker...');
+  
   event.waitUntil(
     caches.keys()
       .then((cacheNames) => {
@@ -47,11 +56,13 @@ self.addEventListener('activate', (event) => {
               return cacheName !== CACHE_NAME && cacheName !== RUNTIME_CACHE;
             })
             .map((cacheName) => {
+              console.log(`[SW] Deleting old cache: ${cacheName}`);
               return caches.delete(cacheName);
             })
         );
       })
       .then(() => {
+        console.log('[SW] Activation complete');
         // Don't call clients.claim() - prevents taking control immediately
         // New SW will control on next page load
       })
@@ -139,6 +150,7 @@ self.addEventListener('fetch', (event) => {
 // Handle messages from clients
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
+    console.log('[SW] Skip waiting requested');
     self.skipWaiting();
   }
 });
@@ -152,4 +164,5 @@ self.addEventListener('sync', (event) => {
 
 async function syncLikes() {
   // Placeholder for syncing liked songs when back online
+  console.log('[SW] Syncing likes...');
 }
