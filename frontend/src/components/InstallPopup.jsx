@@ -1,16 +1,17 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import './InstallPopup.css';
 
 /**
- * PWA Install Popup Component
+ * PWA Install Popup Component - Production Ready
  * 
  * Features:
  * - Shows ONLY if app is not installed
- * - Handles beforeinstallprompt event
+ * - Handles beforeinstallprompt event correctly
  * - Dismissible by: close button, swipe right, scroll
- * - Respects dismissal (won't show again in session)
- * - iOS-specific instructions
- * - No update popups (only install)
+ * - Respects dismissal (session + 7 days)
+ * - iOS-specific instructions (mobile only)
+ * - No race conditions
+ * - No memory leaks
  */
 function InstallPopup() {
   const [deferredPrompt, setDeferredPrompt] = useState(null);
@@ -22,7 +23,24 @@ function InstallPopup() {
   const popupRef = useRef(null);
   const touchStartX = useRef(0);
   const touchEndX = useRef(0);
+  const showTimeoutRef = useRef(null);
 
+  // Stable dismiss handler
+  const handleDismiss = useCallback((sessionOnly = false) => {
+    setShowPopup(false);
+    setIsDismissed(true);
+    
+    // Always save to session
+    sessionStorage.setItem('pwa-install-dismissed', 'true');
+    
+    // Save to localStorage only if close button clicked
+    if (!sessionOnly) {
+      localStorage.setItem('pwa-install-dismissed', 'true');
+      localStorage.setItem('pwa-install-dismissed-time', Date.now().toString());
+    }
+  }, []);
+
+  // Initial setup - runs once
   useEffect(() => {
     // Check if app is already installed
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
@@ -33,11 +51,13 @@ function InstallPopup() {
       return;
     }
 
-    // Detect iOS
-    const iOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-    setIsIOS(iOS);
+    // Detect iOS mobile (not desktop Safari)
+    const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    const hasTouchScreen = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    const isIOSMobile = isIOSDevice && hasTouchScreen;
+    setIsIOS(isIOSMobile);
 
-    // Check session dismissal
+    // Check session dismissal first (fastest check)
     const sessionDismissed = sessionStorage.getItem('pwa-install-dismissed');
     if (sessionDismissed === 'true') {
       setIsDismissed(true);
@@ -61,9 +81,9 @@ function InstallPopup() {
       }
     }
 
-    // For iOS, show popup after delay
-    if (iOS) {
-      setTimeout(() => {
+    // For iOS mobile, show popup after delay
+    if (isIOSMobile) {
+      showTimeoutRef.current = setTimeout(() => {
         setShowPopup(true);
       }, 3000);
     }
@@ -77,11 +97,12 @@ function InstallPopup() {
       setDeferredPrompt(e);
       
       // Show our custom popup after delay
-      setTimeout(() => {
+      showTimeoutRef.current = setTimeout(() => {
         setShowPopup(true);
       }, 3000);
     };
 
+    // Attach listener BEFORE service worker might trigger event
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 
     // Listen for app installed event
@@ -89,6 +110,11 @@ function InstallPopup() {
       setIsInstalled(true);
       setShowPopup(false);
       setDeferredPrompt(null);
+      
+      // Clear any pending timeouts
+      if (showTimeoutRef.current) {
+        clearTimeout(showTimeoutRef.current);
+      }
     };
 
     window.addEventListener('appinstalled', handleAppInstalled);
@@ -96,6 +122,11 @@ function InstallPopup() {
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
       window.removeEventListener('appinstalled', handleAppInstalled);
+      
+      // Clear timeout on unmount
+      if (showTimeoutRef.current) {
+        clearTimeout(showTimeoutRef.current);
+      }
     };
   }, []);
 
@@ -124,7 +155,7 @@ function InstallPopup() {
       window.removeEventListener('scroll', handleScroll);
       clearTimeout(scrollTimeout);
     };
-  }, [showPopup, isDismissed]);
+  }, [showPopup, isDismissed, handleDismiss]);
 
   // Handle swipe right to dismiss
   useEffect(() => {
@@ -158,7 +189,7 @@ function InstallPopup() {
       popup.removeEventListener('touchmove', handleTouchMove);
       popup.removeEventListener('touchend', handleTouchEnd);
     };
-  }, [showPopup, isDismissed]);
+  }, [showPopup, isDismissed, handleDismiss]);
 
   const handleInstallClick = async () => {
     if (!deferredPrompt) {
@@ -184,26 +215,12 @@ function InstallPopup() {
     }
   };
 
-  const handleDismiss = (sessionOnly = false) => {
-    setShowPopup(false);
-    setIsDismissed(true);
-    
-    // Always save to session
-    sessionStorage.setItem('pwa-install-dismissed', 'true');
-    
-    // Save to localStorage only if close button clicked
-    if (!sessionOnly) {
-      localStorage.setItem('pwa-install-dismissed', 'true');
-      localStorage.setItem('pwa-install-dismissed-time', Date.now().toString());
-    }
-  };
-
   // Don't show if already installed or dismissed
   if (isInstalled || isDismissed || !showPopup) {
     return null;
   }
 
-  // iOS-specific instructions
+  // iOS-specific instructions (mobile only)
   if (isIOS) {
     return (
       <div ref={popupRef} className="install-popup install-popup-ios">
