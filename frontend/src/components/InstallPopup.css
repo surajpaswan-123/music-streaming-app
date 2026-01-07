@@ -1,53 +1,55 @@
-/* Install Popup Styles */
+/* Install Popup Styles - Bottom Banner Design */
 
 .install-popup {
   position: fixed;
-  top: 20px;
-  right: 20px;
+  bottom: 0;
+  left: 0;
+  right: 0;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
-  border-radius: 16px;
-  padding: 16px 20px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  padding: 20px;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
   z-index: 10000;
-  max-width: 360px;
-  animation: slideInRight 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  animation: slideInBottom 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  max-height: 200px;
+  overflow: hidden;
 }
 
 .install-popup-ios {
   background: linear-gradient(135deg, #6c63ff 0%, #5a52d5 100%);
 }
 
-@keyframes slideInRight {
+@keyframes slideInBottom {
   from {
-    transform: translateX(400px);
+    transform: translateY(100%);
     opacity: 0;
   }
   to {
-    transform: translateX(0);
+    transform: translateY(0);
     opacity: 1;
   }
 }
 
 .install-popup-close {
   position: absolute;
-  top: 8px;
-  right: 8px;
+  top: 12px;
+  right: 12px;
   background: rgba(255, 255, 255, 0.2);
   border: none;
   color: white;
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   cursor: pointer;
-  font-size: 16px;
+  font-size: 18px;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
   backdrop-filter: blur(5px);
+  z-index: 10;
 }
 
 .install-popup-close:hover {
@@ -62,11 +64,12 @@
 .install-popup-content {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
+  padding-right: 40px;
 }
 
 .install-popup-icon {
-  font-size: 40px;
+  font-size: 48px;
   flex-shrink: 0;
   animation: bounce 2s infinite;
 }
@@ -76,7 +79,7 @@
     transform: translateY(0);
   }
   50% {
-    transform: translateY(-5px);
+    transform: translateY(-8px);
   }
 }
 
@@ -86,15 +89,15 @@
 }
 
 .install-popup-text h3 {
-  margin: 0 0 4px 0;
-  font-size: 16px;
+  margin: 0 0 6px 0;
+  font-size: 18px;
   font-weight: 600;
   color: white;
 }
 
 .install-popup-text p {
   margin: 0;
-  font-size: 13px;
+  font-size: 14px;
   color: rgba(255, 255, 255, 0.9);
   line-height: 1.4;
 }
@@ -103,17 +106,18 @@
   background: white;
   color: #667eea;
   border: none;
-  padding: 10px 20px;
+  padding: 12px 24px;
   border-radius: 8px;
   font-weight: 600;
-  font-size: 14px;
+  font-size: 15px;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   transition: all 0.2s ease;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .install-popup-button:hover {
@@ -126,7 +130,16 @@
 }
 
 .install-popup-button-icon {
-  font-size: 16px;
+  font-size: 18px;
+}
+
+/* Dismiss hint */
+.install-popup-hint {
+  text-align: center;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  margin-top: 12px;
+  font-style: italic;
 }
 
 /* iOS-specific styles */
@@ -134,7 +147,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .ios-share-icon {
@@ -142,66 +155,82 @@
   align-items: center;
   justify-content: center;
   background: rgba(255, 255, 255, 0.3);
-  padding: 2px 6px;
+  padding: 4px 8px;
   border-radius: 4px;
   font-weight: bold;
-  font-size: 16px;
+  font-size: 18px;
 }
 
 /* Mobile responsive */
 @media (max-width: 768px) {
   .install-popup {
-    top: 10px;
-    right: 10px;
-    left: 10px;
-    max-width: none;
-    padding: 14px 16px;
+    padding: 16px;
   }
 
   .install-popup-content {
     flex-wrap: wrap;
+    padding-right: 0;
   }
 
   .install-popup-icon {
-    font-size: 32px;
+    font-size: 40px;
   }
 
   .install-popup-text h3 {
-    font-size: 15px;
+    font-size: 16px;
   }
 
   .install-popup-text p {
-    font-size: 12px;
+    font-size: 13px;
   }
 
   .install-popup-button {
     width: 100%;
     justify-content: center;
-    margin-top: 8px;
+    margin-top: 12px;
+  }
+
+  .install-popup-close {
+    width: 28px;
+    height: 28px;
+    font-size: 16px;
   }
 }
 
 /* Tablet */
 @media (max-width: 1024px) and (min-width: 769px) {
   .install-popup {
-    max-width: 320px;
+    padding: 18px 24px;
   }
 }
 
 /* Animation for dismissal */
 .install-popup.dismissing {
-  animation: slideOutRight 0.3s ease-out forwards;
+  animation: slideOutBottom 0.3s ease-out forwards;
 }
 
-@keyframes slideOutRight {
+@keyframes slideOutBottom {
   from {
-    transform: translateX(0);
+    transform: translateY(0);
     opacity: 1;
   }
   to {
-    transform: translateX(400px);
+    transform: translateY(100%);
     opacity: 0;
   }
+}
+
+/* Swipe indicator (visual feedback) */
+.install-popup::before {
+  content: '';
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 2px;
 }
 
 /* Accessibility */
@@ -214,7 +243,7 @@
 /* Dark mode support */
 @media (prefers-color-scheme: dark) {
   .install-popup {
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
   }
 }
 
@@ -235,5 +264,35 @@
     to {
       opacity: 1;
     }
+  }
+}
+
+/* Landscape mode adjustments */
+@media (max-height: 500px) and (orientation: landscape) {
+  .install-popup {
+    padding: 12px 16px;
+    max-height: 120px;
+  }
+
+  .install-popup-icon {
+    font-size: 32px;
+  }
+
+  .install-popup-text h3 {
+    font-size: 14px;
+    margin-bottom: 2px;
+  }
+
+  .install-popup-text p {
+    font-size: 12px;
+  }
+
+  .install-popup-button {
+    padding: 8px 16px;
+    font-size: 13px;
+  }
+
+  .install-popup-hint {
+    display: none;
   }
 }
