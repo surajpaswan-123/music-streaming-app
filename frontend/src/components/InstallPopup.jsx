@@ -1,102 +1,97 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './InstallPopup.css';
 
+/**
+ * PWA Install Popup Component
+ * 
+ * Features:
+ * - Shows ONLY if app is not installed
+ * - Handles beforeinstallprompt event
+ * - Dismissible by: close button, swipe right, scroll
+ * - Respects dismissal (won't show again in session)
+ * - iOS-specific instructions
+ * - No update popups (only install)
+ */
 function InstallPopup() {
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [showPopup, setShowPopup] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
+  const [isDismissed, setIsDismissed] = useState(false);
+  
+  const popupRef = useRef(null);
+  const touchStartX = useRef(0);
+  const touchEndX = useRef(0);
 
   useEffect(() => {
-    console.log('🔍 PWA: InstallPopup component mounted');
-    
     // Check if app is already installed
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
     const isIOSStandalone = window.navigator.standalone === true;
     
     if (isStandalone || isIOSStandalone) {
-      console.log('✅ PWA: App is already installed');
       setIsInstalled(true);
       return;
     }
 
-    console.log('📱 PWA: App not installed, checking browser support...');
-
-    // Check if running on iOS
+    // Detect iOS
     const iOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
     setIsIOS(iOS);
-    
-    if (iOS) {
-      console.log('📱 PWA: iOS detected, will show iOS instructions');
-      // Show iOS popup after delay
-      setTimeout(() => {
-        setShowPopup(true);
-      }, 2000);
+
+    // Check session dismissal
+    const sessionDismissed = sessionStorage.getItem('pwa-install-dismissed');
+    if (sessionDismissed === 'true') {
+      setIsDismissed(true);
+      return;
     }
 
-    // Check if user previously dismissed the popup
+    // Check localStorage dismissal (7 days)
     const dismissed = localStorage.getItem('pwa-install-dismissed');
     const dismissedTime = localStorage.getItem('pwa-install-dismissed-time');
     
     if (dismissed === 'true' && dismissedTime) {
       const daysSinceDismissed = (Date.now() - parseInt(dismissedTime)) / (1000 * 60 * 60 * 24);
       
-      console.log(`⏳ PWA: Popup was dismissed ${daysSinceDismissed.toFixed(1)} days ago`);
-      
-      // Show again after 7 days
       if (daysSinceDismissed < 7) {
-        console.log('⏳ PWA: Install popup dismissed recently, not showing');
+        setIsDismissed(true);
         return;
       } else {
         // Clear old dismissal
-        console.log('🔄 PWA: Dismissal expired, clearing...');
         localStorage.removeItem('pwa-install-dismissed');
         localStorage.removeItem('pwa-install-dismissed-time');
       }
     }
 
-    // Listen for beforeinstallprompt event
+    // For iOS, show popup after delay
+    if (iOS) {
+      setTimeout(() => {
+        setShowPopup(true);
+      }, 3000);
+    }
+
+    // Listen for beforeinstallprompt event (Android/Chrome)
     const handleBeforeInstallPrompt = (e) => {
-      console.log('📱 PWA: beforeinstallprompt event fired!');
-      console.log('📱 PWA: Browser supports PWA installation');
-      
       // Prevent the default browser install prompt
       e.preventDefault();
       
       // Store the event for later use
       setDeferredPrompt(e);
       
-      // Show our custom popup after a short delay
+      // Show our custom popup after delay
       setTimeout(() => {
-        console.log('✨ PWA: Showing install popup');
         setShowPopup(true);
-      }, 2000); // 2 second delay for better UX
+      }, 3000);
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 
     // Listen for app installed event
     const handleAppInstalled = () => {
-      console.log('✅ PWA: App installed successfully!');
       setIsInstalled(true);
       setShowPopup(false);
       setDeferredPrompt(null);
     };
 
     window.addEventListener('appinstalled', handleAppInstalled);
-
-    // Debug: Check if beforeinstallprompt will fire
-    setTimeout(() => {
-      if (!deferredPrompt && !iOS) {
-        console.warn('⚠️ PWA: beforeinstallprompt not fired yet');
-        console.warn('⚠️ PWA: Possible reasons:');
-        console.warn('   1. App already installed');
-        console.warn('   2. Not on HTTPS');
-        console.warn('   3. Browser doesn\'t support PWA');
-        console.warn('   4. Manifest.json has errors');
-        console.warn('   5. Service worker not registered');
-      }
-    }, 5000);
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
@@ -106,42 +101,76 @@ function InstallPopup() {
 
   // Handle scroll to dismiss
   useEffect(() => {
-    if (!showPopup) return;
+    if (!showPopup || isDismissed) return;
 
     let scrollTimeout;
+    let lastScrollY = window.scrollY;
+    
     const handleScroll = () => {
-      clearTimeout(scrollTimeout);
-      scrollTimeout = setTimeout(() => {
-        console.log('📜 PWA: User scrolled, hiding popup');
-        handleDismiss();
-      }, 100);
+      const currentScrollY = window.scrollY;
+      
+      // Only dismiss if user scrolled down significantly (50px)
+      if (Math.abs(currentScrollY - lastScrollY) > 50) {
+        clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(() => {
+          handleDismiss(true); // Session only
+        }, 200);
+      }
     };
 
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    
     return () => {
       window.removeEventListener('scroll', handleScroll);
       clearTimeout(scrollTimeout);
     };
-  }, [showPopup]);
+  }, [showPopup, isDismissed]);
+
+  // Handle swipe right to dismiss
+  useEffect(() => {
+    if (!showPopup || !popupRef.current || isDismissed) return;
+
+    const popup = popupRef.current;
+
+    const handleTouchStart = (e) => {
+      touchStartX.current = e.touches[0].clientX;
+    };
+
+    const handleTouchMove = (e) => {
+      touchEndX.current = e.touches[0].clientX;
+    };
+
+    const handleTouchEnd = () => {
+      const swipeDistance = touchEndX.current - touchStartX.current;
+      
+      // Swipe right (at least 100px)
+      if (swipeDistance > 100) {
+        handleDismiss(true); // Session only
+      }
+    };
+
+    popup.addEventListener('touchstart', handleTouchStart, { passive: true });
+    popup.addEventListener('touchmove', handleTouchMove, { passive: true });
+    popup.addEventListener('touchend', handleTouchEnd, { passive: true });
+
+    return () => {
+      popup.removeEventListener('touchstart', handleTouchStart);
+      popup.removeEventListener('touchmove', handleTouchMove);
+      popup.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [showPopup, isDismissed]);
 
   const handleInstallClick = async () => {
     if (!deferredPrompt) {
-      console.warn('⚠️ PWA: No deferred prompt available');
-      alert('Installation not available. Please try again later.');
       return;
     }
-
-    console.log('📱 PWA: User clicked install button');
 
     try {
       // Show the browser's install prompt
       await deferredPrompt.prompt();
-      console.log('📱 PWA: Install prompt shown');
 
       // Wait for the user's response
       const { outcome } = await deferredPrompt.userChoice;
-      
-      console.log(`📱 PWA: User ${outcome === 'accepted' ? 'accepted' : 'dismissed'} the install prompt`);
 
       if (outcome === 'accepted') {
         setShowPopup(false);
@@ -151,34 +180,38 @@ function InstallPopup() {
       // Clear the deferred prompt
       setDeferredPrompt(null);
     } catch (error) {
-      console.error('❌ PWA: Install failed:', error);
-      alert('Installation failed. Please try again.');
+      console.error('Install failed:', error);
     }
   };
 
-  const handleDismiss = () => {
-    console.log('❌ PWA: User dismissed install popup');
+  const handleDismiss = (sessionOnly = false) => {
     setShowPopup(false);
+    setIsDismissed(true);
     
-    // Remember dismissal
-    localStorage.setItem('pwa-install-dismissed', 'true');
-    localStorage.setItem('pwa-install-dismissed-time', Date.now().toString());
+    // Always save to session
+    sessionStorage.setItem('pwa-install-dismissed', 'true');
     
-    console.log('💾 PWA: Dismissal saved to localStorage');
+    // Save to localStorage only if close button clicked
+    if (!sessionOnly) {
+      localStorage.setItem('pwa-install-dismissed', 'true');
+      localStorage.setItem('pwa-install-dismissed-time', Date.now().toString());
+    }
   };
 
-  // Don't show if already installed
-  if (isInstalled) {
-    console.log('✅ PWA: Not showing popup - app already installed');
+  // Don't show if already installed or dismissed
+  if (isInstalled || isDismissed || !showPopup) {
     return null;
   }
 
   // iOS-specific instructions
-  if (isIOS && showPopup) {
-    console.log('📱 PWA: Rendering iOS install instructions');
+  if (isIOS) {
     return (
-      <div className="install-popup install-popup-ios">
-        <button className="install-popup-close" onClick={handleDismiss}>
+      <div ref={popupRef} className="install-popup install-popup-ios">
+        <button 
+          className="install-popup-close" 
+          onClick={() => handleDismiss(false)}
+          aria-label="Close"
+        >
           ✕
         </button>
         <div className="install-popup-content">
@@ -190,16 +223,20 @@ function InstallPopup() {
             </p>
           </div>
         </div>
+        <div className="install-popup-hint">Swipe right or scroll to dismiss</div>
       </div>
     );
   }
 
-  // Standard PWA install popup
-  if (showPopup && deferredPrompt) {
-    console.log('📱 PWA: Rendering install popup');
+  // Standard PWA install popup (Android/Chrome)
+  if (deferredPrompt) {
     return (
-      <div className="install-popup">
-        <button className="install-popup-close" onClick={handleDismiss}>
+      <div ref={popupRef} className="install-popup">
+        <button 
+          className="install-popup-close" 
+          onClick={() => handleDismiss(false)}
+          aria-label="Close"
+        >
           ✕
         </button>
         <div className="install-popup-content">
@@ -208,16 +245,19 @@ function InstallPopup() {
             <h3>Install Music Streaming App</h3>
             <p>Get quick access and offline support</p>
           </div>
-          <button className="install-popup-button" onClick={handleInstallClick}>
+          <button 
+            className="install-popup-button" 
+            onClick={handleInstallClick}
+          >
             <span className="install-popup-button-icon">⬇️</span>
             Install
           </button>
         </div>
+        <div className="install-popup-hint">Swipe right or scroll to dismiss</div>
       </div>
     );
   }
 
-  console.log('📱 PWA: Not showing popup - waiting for beforeinstallprompt');
   return null;
 }
 
