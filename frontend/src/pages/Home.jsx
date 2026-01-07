@@ -35,14 +35,6 @@ function Home() {
       console.log('🎵 Home: Received songs:', allSongs);
       console.log('🎵 Home: Songs count:', allSongs?.length || 0);
 
-      // DEBUG: Log first song to check column names
-      if (allSongs && allSongs.length > 0) {
-        console.log('🔍 DEBUG: First song data:', allSongs[0]);
-        console.log('🔍 DEBUG: First song keys:', Object.keys(allSongs[0]));
-        console.log('🔍 DEBUG: banner_url:', allSongs[0].banner_url);
-        console.log('🔍 DEBUG: show_banner:', allSongs[0].show_banner);
-      }
-
       // Validate data
       if (!Array.isArray(allSongs)) {
         console.error('❌ Home: fetchSongs() did not return an array:', allSongs);
@@ -110,13 +102,7 @@ function Home() {
   };
 
   // Filter songs with banners (show_banner === true AND banner_url exists)
-  const songsWithBanners = songs.filter(song => {
-    const hasBanner = song.show_banner && song.banner_url;
-    console.log(`🔍 Song "${song.title}": show_banner=${song.show_banner}, banner_url=${song.banner_url}, hasBanner=${hasBanner}`);
-    return hasBanner;
-  });
-
-  console.log('🎨 Songs with banners:', songsWithBanners);
+  const songsWithBanners = songs.filter(song => song.show_banner && song.banner_url);
 
   if (loading) {
     return (
@@ -157,20 +143,6 @@ function Home() {
           </button>
         )}
       </div>
-
-      {/* DEBUG: Show banner count */}
-      {songsWithBanners.length > 0 && (
-        <div style={{ padding: '1rem', background: '#2a2a2a', borderRadius: '8px', marginBottom: '1rem' }}>
-          <p style={{ color: '#1ed760', fontWeight: 'bold' }}>
-            🎨 DEBUG: Found {songsWithBanners.length} song(s) with banners
-          </p>
-          {songsWithBanners.map(song => (
-            <p key={song.id} style={{ color: '#fff', fontSize: '0.9rem' }}>
-              • {song.title} - show_banner: {String(song.show_banner)}, banner_url: {song.banner_url?.substring(0, 50)}...
-            </p>
-          ))}
-        </div>
-      )}
 
       {/* Banner Section - Data-Driven */}
       {songsWithBanners.length > 0 && (
