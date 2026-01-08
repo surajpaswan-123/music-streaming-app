@@ -5,7 +5,6 @@ import { getRecommendations, getRecentlyPlayed } from '../services/recommendatio
 import { useAuth } from '../context/AuthContext';
 import { usePlayer } from '../context/PlayerContext';
 import SongCard from '../components/SongCard';
-import SongBanner from '../components/SongBanner';
 import { supabase } from '../config/supabase';
 import './Home.css';
 
@@ -21,7 +20,7 @@ function Home() {
   useEffect(() => {
     loadSongs();
 
-    // 🔥 REAL-TIME LISTENER - Auto-refresh on Supabase changes
+    // Real-time listener - Auto-refresh on Supabase changes
     console.log('🔄 Setting up real-time listener for songs table...');
     
     const channel = supabase
@@ -59,8 +58,7 @@ function Home() {
 
       console.log('🎵 Home: Loading songs...');
 
-      // Fetch all songs - fetchSongs() returns data directly, not { data: [...] }
-      // This includes banner_url and show_banner fields
+      // Fetch all songs - includes cover_url field for card backgrounds
       const allSongs = await fetchSongs();
       
       console.log('🎵 Home: Received songs:', allSongs);
@@ -128,13 +126,6 @@ function Home() {
     }
   };
 
-  const handleBannerPlay = (song) => {
-    playSong(song, songs);
-  };
-
-  // Filter songs with banners (show_banner === true AND banner_url exists)
-  const songsWithBanners = songs.filter(song => song.show_banner && song.banner_url);
-
   if (loading) {
     return (
       <div className="page home-page">
@@ -174,19 +165,6 @@ function Home() {
           </button>
         )}
       </div>
-
-      {/* Banner Section - Data-Driven with Real-time Updates */}
-      {songsWithBanners.length > 0 && (
-        <section className="banner-section">
-          {songsWithBanners.map(song => (
-            <SongBanner 
-              key={`banner-${song.id}`} 
-              song={song} 
-              onPlayClick={handleBannerPlay}
-            />
-          ))}
-        </section>
-      )}
 
       {/* Recommended Section */}
       {recommendedSongs.length > 0 && (
