@@ -1,12 +1,13 @@
 /**
  * Service Worker Registration Utility
- * Handles PWA service worker registration with SILENT updates
- * No "update available" popups - updates happen on next page load
+ * CRITICAL FIX: Force immediate activation of new service workers
+ * Ensures users always get latest code on refresh
  */
 
 export function registerServiceWorker() {
   // Check if service workers are supported
   if (!('serviceWorker' in navigator)) {
+    console.log('[PWA] Service workers not supported');
     return;
   }
 
@@ -14,28 +15,49 @@ export function registerServiceWorker() {
   window.addEventListener('load', async () => {
     try {
       const registration = await navigator.serviceWorker.register('/sw.js', {
-        scope: '/'
+        scope: '/',
+        updateViaCache: 'none'  // ✅ CRITICAL: Never use cached service worker file
       });
 
-      // SILENT UPDATE STRATEGY
-      // New service worker will install in background
-      // Will activate only when all tabs are closed
-      // No user notification needed
+      console.log('[PWA] Service worker registered successfully');
 
+      // ✅ CRITICAL FIX: Check for updates on every page load
+      registration.update().catch(err => {
+        console.warn('[PWA] Update check failed:', err);
+      });
+
+      // ✅ CRITICAL: Handle updates immediately (no waiting)
       registration.addEventListener('updatefound', () => {
         const newWorker = registration.installing;
+        console.log('[PWA] New service worker found, installing...');
 
         newWorker.addEventListener('statechange', () => {
-          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-            // New version installed but not activated yet
-            // Will activate on next page load (when user closes all tabs)
-            // NO POPUP - Silent update
+          if (newWorker.state === 'installed') {
+            if (navigator.serviceWorker.controller) {
+              // New version available - activate immediately
+              console.log('[PWA] New version installed, activating immediately...');
+              
+              // Tell new worker to skip waiting
+              newWorker.postMessage({ type: 'SKIP_WAITING' });
+              
+              // Reload page once to activate new service worker
+              // This ensures users get the latest code
+              window.location.reload();
+            } else {
+              // First install
+              console.log('[PWA] Service worker installed for first time');
+            }
           }
         });
       });
 
+      // ✅ Listen for controller change (new SW activated)
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        console.log('[PWA] New service worker activated');
+      });
+
     } catch (error) {
-      // Silent fail - don't show error to user
+      console.error('[PWA] Service worker registration failed:', error);
     }
   });
 }
@@ -52,10 +74,16 @@ export async function unregisterServiceWorker() {
     const registrations = await navigator.serviceWorker.getRegistrations();
     
     for (const registration of registrations) {
-      await registration.unregister();
+      const success = await registration.unregister();
+      console.log('[PWA] Service worker unregistered:', success);
     }
+    
+    // Clear all caches
+    await clearAllCaches();
+    console.log('[PWA] All caches cleared');
+    
   } catch (error) {
-    // Silent fail
+    console.error('[PWA] Unregister failed:', error);
   }
 }
 
@@ -112,27 +140,31 @@ export async function clearAllCaches() {
 
   try {
     const cacheNames = await caches.keys();
+    console.log('[PWA] Clearing caches:', cacheNames);
     
     await Promise.all(
       cacheNames.map(cacheName => caches.delete(cacheName))
     );
+    
+    console.log('[PWA] All caches cleared successfully');
   } catch (error) {
-    // Silent fail
+    console.error('[PWA] Cache clearing failed:', error);
   }
 }
 
 /**
  * Force update service worker (manual refresh)
- * Only use this if user explicitly requests update
  */
 export async function forceUpdateServiceWorker() {
   const registration = await getServiceWorkerRegistration();
   
   if (!registration) {
+    console.warn('[PWA] No service worker registration found');
     return;
   }
 
   try {
+    console.log('[PWA] Forcing service worker update...');
     await registration.update();
     
     if (registration.waiting) {
@@ -141,9 +173,43 @@ export async function forceUpdateServiceWorker() {
       
       // Reload page to activate new service worker
       window.location.reload();
+    } else {
+      console.log('[PWA] No waiting service worker');
     }
   } catch (error) {
-    // Silent fail
+    console.error('[PWA] Force update failed:', error);
+  }
+}
+
+/**
+ * Get cache status for debugging
+ */
+export async function getCacheStatus() {
+  if (!('caches' in window)) {
+    return { supported: false };
+  }
+
+  try {
+    const cacheNames = await caches.keys();
+    const cacheDetails = await Promise.all(
+      cacheNames.map(async (name) => {
+        const cache = await caches.open(name);
+        const keys = await cache.keys();
+        return {
+          name,
+          entries: keys.length,
+          urls: keys.map(req => req.url)
+        };
+      })
+    );
+
+    return {
+      supported: true,
+      caches: cacheDetails,
+      totalCaches: cacheNames.length
+    };
+  } catch (error) {
+    return { supported: true, error: error.message };
   }
 }
 
@@ -155,5 +221,6 @@ export default {
   getServiceWorkerRegistration,
   sendMessageToServiceWorker,
   clearAllCaches,
-  forceUpdateServiceWorker
+  forceUpdateServiceWorker,
+  getCacheStatus
 };
