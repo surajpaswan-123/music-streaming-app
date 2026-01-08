@@ -13,6 +13,9 @@ function SongCard({ song }) {
   const isCurrentSong = currentSong?.id === song.id;
   const isCurrentlyPlaying = isCurrentSong && isPlaying;
 
+  // Use cover_url for background, fallback to cover field
+  const backgroundImage = song.cover_url || song.cover;
+
   // Check if song is liked on mount
   useEffect(() => {
     if (user) {
@@ -74,12 +77,17 @@ function SongCard({ song }) {
       className={`song-card ${isCurrentSong ? 'song-card-active' : ''}`}
       onClick={handlePlayClick}
     >
-      <div className="song-card-cover-container">
-        <img 
-          src={song.cover} 
-          alt={song.title}
-          className="song-card-cover"
-        />
+      <div 
+        className="song-card-cover-container"
+        style={{
+          backgroundImage: backgroundImage ? `url(${backgroundImage})` : 'none',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center'
+        }}
+      >
+        {/* Gradient overlay for text readability */}
+        <div className="song-card-background-overlay"></div>
+        
         <div className="song-card-overlay">
           <button className="song-card-play-btn">
             {isCurrentlyPlaying ? '⏸️' : '▶️'}
