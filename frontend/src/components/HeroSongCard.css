@@ -1,0 +1,258 @@
+/* Hero Song Card - Banner Background in Grid */
+
+.hero-song-card {
+  position: relative;
+  grid-column: 1 / -1; /* Span full width of grid */
+  height: 300px;
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  margin-bottom: 1rem;
+}
+
+.hero-song-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 30px rgba(108, 99, 255, 0.4);
+}
+
+.hero-song-card-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  transition: transform 0.5s ease;
+}
+
+.hero-song-card:hover .hero-song-card-background {
+  transform: scale(1.05);
+}
+
+.hero-song-card-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    to right,
+    rgba(0, 0, 0, 0.85) 0%,
+    rgba(0, 0, 0, 0.6) 50%,
+    rgba(0, 0, 0, 0.3) 100%
+  );
+}
+
+.hero-song-card-content {
+  position: relative;
+  z-index: 2;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 2rem;
+  color: white;
+  max-width: 600px;
+}
+
+.hero-song-card-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, #6c63ff 0%, #5a52d5 100%);
+  color: white;
+  padding: 0.4rem 1rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 1rem;
+  width: fit-content;
+  box-shadow: 0 2px 10px rgba(108, 99, 255, 0.5);
+}
+
+.hero-song-card-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin: 0.5rem 0;
+  text-shadow: 0 2px 15px rgba(0, 0, 0, 0.8);
+  line-height: 1.2;
+}
+
+.hero-song-card-artist {
+  font-size: 1.1rem;
+  opacity: 0.9;
+  margin: 0.5rem 0 1.5rem 0;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.8);
+}
+
+.hero-song-card-play-btn {
+  background: linear-gradient(135deg, #6c63ff 0%, #5a52d5 100%);
+  color: white;
+  border: none;
+  padding: 1rem 2.5rem;
+  border-radius: 30px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(108, 99, 255, 0.4);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: fit-content;
+}
+
+.hero-song-card-play-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 20px rgba(108, 99, 255, 0.6);
+  background: linear-gradient(135deg, #7b72ff 0%, #6a5fe5 100%);
+}
+
+.hero-song-card-play-btn:active {
+  transform: scale(0.98);
+}
+
+.hero-song-card-playing-indicator {
+  position: absolute;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  display: flex;
+  gap: 4px;
+  align-items: flex-end;
+  height: 24px;
+  z-index: 3;
+}
+
+.hero-song-card-playing-indicator .playing-bar {
+  width: 4px;
+  background: linear-gradient(to top, #6c63ff, #1ed760);
+  border-radius: 2px;
+  animation: playing 0.8s ease-in-out infinite;
+}
+
+.hero-song-card-playing-indicator .playing-bar:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.hero-song-card-playing-indicator .playing-bar:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.hero-song-card-playing-indicator .playing-bar:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes playing {
+  0%, 100% {
+    height: 6px;
+  }
+  50% {
+    height: 24px;
+  }
+}
+
+/* Responsive Design */
+
+/* Tablet */
+@media (max-width: 768px) {
+  .hero-song-card {
+    height: 250px;
+  }
+
+  .hero-song-card-content {
+    padding: 1.5rem;
+  }
+
+  .hero-song-card-title {
+    font-size: 2rem;
+  }
+
+  .hero-song-card-artist {
+    font-size: 1rem;
+  }
+
+  .hero-song-card-play-btn {
+    padding: 0.875rem 2rem;
+    font-size: 0.95rem;
+  }
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  .hero-song-card {
+    height: 220px;
+    margin-bottom: 1.5rem;
+  }
+
+  .hero-song-card-overlay {
+    background: linear-gradient(
+      to top,
+      rgba(0, 0, 0, 0.95) 0%,
+      rgba(0, 0, 0, 0.7) 50%,
+      rgba(0, 0, 0, 0.4) 100%
+    );
+  }
+
+  .hero-song-card-content {
+    padding: 1.25rem;
+    justify-content: flex-end;
+    max-width: 100%;
+  }
+
+  .hero-song-card-badge {
+    font-size: 0.7rem;
+    padding: 0.35rem 0.9rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .hero-song-card-title {
+    font-size: 1.5rem;
+  }
+
+  .hero-song-card-artist {
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+  }
+
+  .hero-song-card-play-btn {
+    padding: 0.75rem 1.75rem;
+    font-size: 0.9rem;
+  }
+
+  .hero-song-card-playing-indicator {
+    bottom: 1rem;
+    right: 1rem;
+    height: 20px;
+  }
+
+  .hero-song-card-playing-indicator .playing-bar {
+    width: 3px;
+  }
+
+  @keyframes playing {
+    0%, 100% {
+      height: 5px;
+    }
+    50% {
+      height: 20px;
+    }
+  }
+}
+
+/* Extra small mobile */
+@media (max-width: 360px) {
+  .hero-song-card {
+    height: 200px;
+  }
+
+  .hero-song-card-title {
+    font-size: 1.3rem;
+  }
+
+  .hero-song-card-artist {
+    font-size: 0.85rem;
+  }
+}
