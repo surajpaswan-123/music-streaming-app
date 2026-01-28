@@ -5,6 +5,7 @@ import { getRecommendations, getRecentlyPlayed } from '../services/recommendatio
 import { useAuth } from '../context/AuthContext';
 import { usePlayer } from '../context/PlayerContext';
 import SongCard from '../components/SongCard';
+import HeroSongCard from '../components/HeroSongCard';
 import { supabase } from '../config/supabase';
 import './Home.css';
 
@@ -20,7 +21,7 @@ function Home() {
   useEffect(() => {
     loadSongs();
 
-    // Real-time listener - Auto-refresh on Supabase changes
+    // Real-time listener for instant updates
     console.log('🔄 Setting up real-time listener for songs table...');
     
     const channel = supabase
@@ -28,15 +29,13 @@ function Home() {
       .on(
         'postgres_changes',
         {
-          event: '*', // Listen to all events (INSERT, UPDATE, DELETE)
+          event: '*',
           schema: 'public',
           table: 'songs'
         },
         (payload) => {
           console.log('🔥 Real-time update detected:', payload);
           console.log('🔄 Reloading songs automatically...');
-          
-          // Reload songs when any change happens
           loadSongs();
         }
       )
@@ -44,7 +43,6 @@ function Home() {
         console.log('📡 Real-time subscription status:', status);
       });
 
-    // Cleanup on unmount
     return () => {
       console.log('🔌 Unsubscribing from real-time updates...');
       supabase.removeChannel(channel);
@@ -58,13 +56,11 @@ function Home() {
 
       console.log('🎵 Home: Loading songs...');
 
-      // Fetch all songs - includes cover_url field for card backgrounds
       const allSongs = await fetchSongs();
       
       console.log('🎵 Home: Received songs:', allSongs);
       console.log('🎵 Home: Songs count:', allSongs?.length || 0);
 
-      // Validate data
       if (!Array.isArray(allSongs)) {
         console.error('❌ Home: fetchSongs() did not return an array:', allSongs);
         throw new Error('Invalid data format received from fetchSongs()');
@@ -72,11 +68,9 @@ function Home() {
 
       setSongs(allSongs);
 
-      // Get recently played
       const recent = getRecentlyPlayed();
       setRecentlyPlayed(recent);
 
-      // Get recommendations if user is logged in
       if (user) {
         try {
           const token = await getAccessToken();
@@ -84,15 +78,12 @@ function Home() {
           
           console.log('❤️ Home: Liked songs:', likedSongs);
 
-          // Validate liked songs data
           const likedData = Array.isArray(likedSongs) ? likedSongs : [];
 
-          // Map liked song IDs to full song objects
           const likedSongObjects = likedData
             .map(liked => allSongs.find(song => song.id === liked.song_id))
             .filter(Boolean);
 
-          // Get recommendations
           const recommended = getRecommendations(
             allSongs,
             likedSongObjects,
@@ -102,10 +93,8 @@ function Home() {
           setRecommendedSongs(recommended);
         } catch (err) {
           console.error('⚠️ Home: Failed to load recommendations:', err);
-          // Continue without recommendations - not critical
         }
       } else {
-        // For non-logged in users, show random songs as recommendations
         const shuffled = [...allSongs].sort(() => 0.5 - Math.random());
         setRecommendedSongs(shuffled.slice(0, 6));
       }
@@ -125,6 +114,14 @@ function Home() {
       playSong(songs[0], songs);
     }
   };
+
+  // Find featured song (has banner)
+  const featuredSong = songs.find(song => song.show_banner && song.banner_url);
+  
+  // Other songs (excluding featured)
+  const otherSongs = featuredSong 
+    ? songs.filter(song => song.id !== featuredSong.id)
+    : songs;
 
   if (loading) {
     return (
@@ -166,7 +163,7 @@ function Home() {
         )}
       </div>
 
-      {/* Recommended Section */}
+      {/* Recommended Section with Hero Card */}
       {recommendedSongs.length > 0 && (
         <section className="music-section">
           <div className="section-header">
@@ -178,6 +175,10 @@ function Home() {
             </p>
           </div>
           <div className="songs-grid">
+            {/* Hero Card with Banner Background (if featured song exists) */}
+            {featuredSong && <HeroSongCard song={featuredSong} />}
+            
+            {/* Regular Song Cards */}
             {recommendedSongs.map(song => (
               <SongCard key={song.id} song={song} />
             ))}
@@ -214,7 +215,11 @@ function Home() {
           </div>
         ) : (
           <div className="songs-grid">
-            {songs.map(song => (
+            {/* Hero Card with Banner Background (if featured song exists) */}
+            {featuredSong && <HeroSongCard song={featuredSong} />}
+            
+            {/* Other Song Cards */}
+            {otherSongs.map(song => (
               <SongCard key={song.id} song={song} />
             ))}
           </div>
