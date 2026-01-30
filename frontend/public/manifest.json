@@ -1,7 +1,7 @@
 {
-  "name": "Music Streaming App",
-  "short_name": "Music App",
-  "description": "Stream your favorite music anytime, anywhere",
+  "name": "SunoNA - Audio Storytelling",
+  "short_name": "SunoNA",
+  "description": "Listen to captivating audio stories anytime, anywhere",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#1a1a2e",
@@ -22,5 +22,5 @@
       "purpose": "maskable"
     }
   ],
-  "categories": ["music", "entertainment"]
+  "categories": ["entertainment", "storytelling", "audio"]
 }
