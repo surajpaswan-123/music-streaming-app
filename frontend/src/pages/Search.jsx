@@ -46,7 +46,7 @@ function Search() {
 
       console.log('🔍 Search: Searching for:', searchQuery);
 
-      // searchSongs() returns array directly, not { data: [...] }
+      // searchSongs() returns array directly (stories)
       const searchResults = await searchSongs(searchQuery);
       
       console.log('🔍 Search: Results:', searchResults);
@@ -63,7 +63,7 @@ function Search() {
 
     } catch (err) {
       console.error('❌ Search: Search failed:', err);
-      setError(err.message || 'Failed to search songs. Please try again.');
+      setError(err.message || 'Failed to search stories. Please try again.');
       setResults([]);
     } finally {
       setLoading(false);
@@ -81,7 +81,7 @@ function Search() {
     <div className="page search-page">
       <div className="search-header">
         <h2>Search</h2>
-        <p className="search-subtitle">Find your favorite songs, artists, and albums</p>
+        <p className="search-subtitle">Find your favorite stories, narrators, and collections</p>
       </div>
 
       <div className="search-container">
@@ -90,7 +90,7 @@ function Search() {
           <input
             type="text"
             className="search-input"
-            placeholder="Search for songs, artists, or albums..."
+            placeholder="Search for stories, narrators, or genres..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             autoFocus
@@ -117,7 +117,7 @@ function Search() {
 
         {!loading && !error && hasSearched && results.length === 0 && (
           <div className="search-empty">
-            <div className="empty-icon">🎵</div>
+            <div className="empty-icon">📖</div>
             <h3>No results found</h3>
             <p>Try searching with different keywords</p>
             <div className="search-hints">
@@ -125,8 +125,8 @@ function Search() {
               <ul>
                 <li>Check your spelling</li>
                 <li>Try different keywords</li>
-                <li>Search by artist name</li>
-                <li>Search by song title</li>
+                <li>Search by narrator name</li>
+                <li>Search by story title</li>
               </ul>
             </div>
           </div>
@@ -135,7 +135,7 @@ function Search() {
         {!loading && !error && results.length > 0 && (
           <div className="search-results">
             <div className="results-header">
-              <h3>Found {results.length} {results.length === 1 ? 'song' : 'songs'}</h3>
+              <h3>Found {results.length} {results.length === 1 ? 'story' : 'stories'}</h3>
             </div>
             <div className="songs-grid">
               {results.map(song => (
@@ -147,19 +147,19 @@ function Search() {
 
         {!loading && !error && !hasSearched && (
           <div className="search-suggestions">
-            <h3>Popular Searches</h3>
+            <h3>Popular Genres</h3>
             <div className="suggestion-chips">
-              <button className="suggestion-chip" onClick={() => setQuery('rock')}>
-                🎸 Rock
+              <button className="suggestion-chip" onClick={() => setQuery('horror')}>
+                👻 Horror
               </button>
-              <button className="suggestion-chip" onClick={() => setQuery('jazz')}>
-                🎷 Jazz
+              <button className="suggestion-chip" onClick={() => setQuery('motivation')}>
+                💪 Motivation
               </button>
-              <button className="suggestion-chip" onClick={() => setQuery('classical')}>
-                🎻 Classical
+              <button className="suggestion-chip" onClick={() => setQuery('love')}>
+                ❤️ Love
               </button>
-              <button className="suggestion-chip" onClick={() => setQuery('electronic')}>
-                🎹 Electronic
+              <button className="suggestion-chip" onClick={() => setQuery('history')}>
+                📜 History
               </button>
             </div>
           </div>
