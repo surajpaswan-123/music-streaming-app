@@ -5,6 +5,7 @@ import { likeSong, unlikeSong, checkIsLiked } from '../services/api';
 import './SongCard.css';
 
 function SongCard({ song }) {
+  // song represents a story/episode
   const { currentSong, isPlaying, playSong, togglePlay, playlist } = usePlayer();
   const { user, getAccessToken } = useAuth();
   const [isLiked, setIsLiked] = useState(false);
@@ -13,10 +14,10 @@ function SongCard({ song }) {
   const isCurrentSong = currentSong?.id === song.id;
   const isCurrentlyPlaying = isCurrentSong && isPlaying;
 
-  // Use cover_url for background, fallback to cover field
+  // Use cover_url for story thumbnail, fallback to cover field
   const backgroundImage = song.cover_url || song.cover;
 
-  // Check if song is liked on mount
+  // Check if story is liked on mount
   useEffect(() => {
     if (user) {
       checkLikedStatus();
