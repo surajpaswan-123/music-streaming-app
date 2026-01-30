@@ -7,9 +7,9 @@ import './Library.css';
 
 function Library() {
   const { user, getAccessToken } = useAuth();
-  const [likedSongs, setLikedSongs] = useState([]);
-  const [playlists, setPlaylists] = useState([]);
-  const [allSongs, setAllSongs] = useState([]);
+  const [likedSongs, setLikedSongs] = useState([]); // liked stories
+  const [playlists, setPlaylists] = useState([]); // story lists
+  const [allSongs, setAllSongs] = useState([]); // all stories
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('liked'); // 'liked' or 'playlists'
@@ -29,11 +29,11 @@ function Library() {
       
       const token = await getAccessToken();
       
-      // Load all songs first - fetchSongs() returns array directly
+      // Load all stories first - fetchSongs() returns array directly
       const songs = await fetchSongs();
       
-      console.log('📚 Library: All songs:', songs);
-      console.log('📚 Library: Songs count:', songs?.length || 0);
+      console.log('📚 Library: All stories:', songs);
+      console.log('📚 Library: Stories count:', songs?.length || 0);
 
       // Validate data
       if (!Array.isArray(songs)) {
@@ -43,26 +43,26 @@ function Library() {
 
       setAllSongs(songs);
       
-      // Load liked songs - getLikedSongs() returns array directly
+      // Load liked stories - getLikedSongs() returns array directly
       const likedData = await getLikedSongs(token);
       
-      console.log('❤️ Library: Liked songs data:', likedData);
+      console.log('❤️ Library: Liked stories data:', likedData);
 
       // Validate liked data
       const likedArray = Array.isArray(likedData) ? likedData : [];
       
-      // Map liked song IDs to full song objects
+      // Map liked story IDs to full story objects
       const likedSongObjects = likedArray
         .map(liked => songs.find(song => song.id === liked.song_id))
         .filter(Boolean);
       
-      console.log('❤️ Library: Liked song objects:', likedSongObjects);
+      console.log('❤️ Library: Liked story objects:', likedSongObjects);
       setLikedSongs(likedSongObjects);
       
-      // Load playlists - getPlaylists() returns array directly
+      // Load story lists - getPlaylists() returns array directly
       const playlistsData = await getPlaylists(token);
       
-      console.log('📚 Library: Playlists:', playlistsData);
+      console.log('📚 Library: Story lists:', playlistsData);
 
       // Validate playlists data
       const playlistsArray = Array.isArray(playlistsData) ? playlistsData : [];
@@ -83,7 +83,7 @@ function Library() {
       <div className="page library-page">
         <div className="empty-state">
           <h2>Sign in to view your library</h2>
-          <p>Create an account to save your favorite songs and playlists</p>
+          <p>Create an account to save your favorite stories and lists</p>
           <a href="/login" className="cta-button">Sign In</a>
         </div>
       </div>
@@ -123,13 +123,13 @@ function Library() {
           className={`tab-button ${activeTab === 'liked' ? 'active' : ''}`}
           onClick={() => setActiveTab('liked')}
         >
-          ❤️ Liked Songs ({likedSongs.length})
+          ❤️ Liked Stories ({likedSongs.length})
         </button>
         <button
           className={`tab-button ${activeTab === 'playlists' ? 'active' : ''}`}
           onClick={() => setActiveTab('playlists')}
         >
-          📚 Playlists ({playlists.length})
+          📚 Story Lists ({playlists.length})
         </button>
       </div>
 
@@ -137,9 +137,9 @@ function Library() {
         <div className="library-content">
           {likedSongs.length === 0 ? (
             <div className="empty-state">
-              <p>No liked songs yet</p>
+              <p>No liked stories yet</p>
               <p className="empty-state-hint">
-                Like songs by clicking the heart icon
+                Like stories by clicking the heart icon
               </p>
             </div>
           ) : (
@@ -156,11 +156,11 @@ function Library() {
         <div className="library-content">
           {playlists.length === 0 ? (
             <div className="empty-state">
-              <p>No playlists yet</p>
+              <p>No story lists yet</p>
               <p className="empty-state-hint">
-                Create your first playlist to organize your music
+                Create your first story list to organize your favorites
               </p>
-              <button className="cta-button">Create Playlist</button>
+              <button className="cta-button">Create Story List</button>
             </div>
           ) : (
             <div className="playlists-grid">
