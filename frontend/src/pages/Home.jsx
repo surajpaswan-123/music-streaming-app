@@ -10,19 +10,19 @@ import { supabase } from '../config/supabase';
 import './Home.css';
 
 function Home() {
-  const [songs, setSongs] = useState([]);
-  const [recommendedSongs, setRecommendedSongs] = useState([]);
-  const [recentlyPlayed, setRecentlyPlayed] = useState([]);
+  const [songs, setSongs] = useState([]); // stories/episodes
+  const [recommendedSongs, setRecommendedSongs] = useState([]); // recommended stories
+  const [recentlyPlayed, setRecentlyPlayed] = useState([]); // recently listened stories
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const { user, getAccessToken } = useAuth();
-  const { currentSong, playSong } = usePlayer();
+  const { currentSong, playSong } = usePlayer(); // currentStory, playStory
 
   useEffect(() => {
     loadSongs();
 
     // Real-time listener for instant updates
-    console.log('🔄 Setting up real-time listener for songs table...');
+    console.log('🔄 Setting up real-time listener for stories...');
     
     const channel = supabase
       .channel('songs-changes')
@@ -31,11 +31,11 @@ function Home() {
         {
           event: '*',
           schema: 'public',
-          table: 'songs'
+          table: 'songs' // stories table
         },
         (payload) => {
           console.log('🔥 Real-time update detected:', payload);
-          console.log('🔄 Reloading songs automatically...');
+          console.log('🔄 Reloading stories automatically...');
           loadSongs();
         }
       )
@@ -54,12 +54,12 @@ function Home() {
       setLoading(true);
       setError(null);
 
-      console.log('🎵 Home: Loading songs...');
+      console.log('📖 Home: Loading stories...');
 
-      const allSongs = await fetchSongs();
+      const allSongs = await fetchSongs(); // fetch stories
       
-      console.log('🎵 Home: Received songs:', allSongs);
-      console.log('🎵 Home: Songs count:', allSongs?.length || 0);
+      console.log('📖 Home: Received stories:', allSongs);
+      console.log('📖 Home: Stories count:', allSongs?.length || 0);
 
       if (!Array.isArray(allSongs)) {
         console.error('❌ Home: fetchSongs() did not return an array:', allSongs);
@@ -74,9 +74,9 @@ function Home() {
       if (user) {
         try {
           const token = await getAccessToken();
-          const likedSongs = await getLikedSongs(token);
+          const likedSongs = await getLikedSongs(token); // liked stories
           
-          console.log('❤️ Home: Liked songs:', likedSongs);
+          console.log('❤️ Home: Liked stories:', likedSongs);
 
           const likedData = Array.isArray(likedSongs) ? likedSongs : [];
 
@@ -99,11 +99,11 @@ function Home() {
         setRecommendedSongs(shuffled.slice(0, 6));
       }
 
-      console.log('✅ Home: Songs loaded successfully');
+      console.log('✅ Home: Stories loaded successfully');
 
     } catch (err) {
-      console.error('❌ Home: Failed to load songs:', err);
-      setError(err.message || 'Failed to load songs. Please try again.');
+      console.error('❌ Home: Failed to load stories:', err);
+      setError(err.message || 'Failed to load stories. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -111,14 +111,14 @@ function Home() {
 
   const handlePlayAll = () => {
     if (songs.length > 0) {
-      playSong(songs[0], songs);
+      playSong(songs[0], songs); // play first story
     }
   };
 
-  // Find featured song (has banner)
+  // Find featured story (has banner)
   const featuredSong = songs.find(song => song.show_banner && song.banner_url);
   
-  // Other songs (excluding featured)
+  // Other stories (excluding featured)
   const otherSongs = featuredSong 
     ? songs.filter(song => song.id !== featuredSong.id)
     : songs;
@@ -128,7 +128,7 @@ function Home() {
       <div className="page home-page">
         <div className="loading-container">
           <div className="loading-spinner"></div>
-          <p>Loading songs...</p>
+          <p>Loading stories...</p>
         </div>
       </div>
     );
@@ -151,7 +151,7 @@ function Home() {
     <div className="page home-page">
       <div className="home-header">
         <div className="header-content">
-          <h2>Discover Music</h2>
+          <h2>Discover Stories</h2>
           <p className="header-subtitle">
             {user ? `Welcome back, ${user.email.split('@')[0]}!` : 'Explore our collection'}
           </p>
@@ -168,17 +168,17 @@ function Home() {
         <section className="music-section">
           <div className="section-header">
             <h3>
-              {user ? '🎯 Recommended for You' : '🔥 Popular Songs'}
+              {user ? '🎯 Recommended for You' : '🔥 Popular Stories'}
             </h3>
             <p className="section-subtitle">
               {user ? 'Based on your listening history' : 'Trending now'}
             </p>
           </div>
           <div className="songs-grid">
-            {/* Hero Card with Banner Background (if featured song exists) */}
+            {/* Hero Card with Banner Background (if featured story exists) */}
             {featuredSong && <HeroSongCard song={featuredSong} />}
             
-            {/* Regular Song Cards */}
+            {/* Regular Story Cards */}
             {recommendedSongs.map(song => (
               <SongCard key={song.id} song={song} />
             ))}
@@ -201,24 +201,24 @@ function Home() {
         </section>
       )}
 
-      {/* All Songs Section */}
+      {/* All Stories Section */}
       <section className="music-section">
         <div className="section-header">
-          <h3>🎵 All Songs</h3>
+          <h3>📚 All Stories</h3>
           <p className="section-subtitle">
-            {songs.length} {songs.length === 1 ? 'song' : 'songs'} available
+            {songs.length} {songs.length === 1 ? 'story' : 'stories'} available
           </p>
         </div>
         {songs.length === 0 ? (
           <div className="empty-state">
-            <p>No songs available yet. Check back soon!</p>
+            <p>No stories available yet. Check back soon!</p>
           </div>
         ) : (
           <div className="songs-grid">
-            {/* Hero Card with Banner Background (if featured song exists) */}
+            {/* Hero Card with Banner Background (if featured story exists) */}
             {featuredSong && <HeroSongCard song={featuredSong} />}
             
-            {/* Other Song Cards */}
+            {/* Other Story Cards */}
             {otherSongs.map(song => (
               <SongCard key={song.id} song={song} />
             ))}
