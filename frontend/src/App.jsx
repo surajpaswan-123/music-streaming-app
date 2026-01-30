@@ -22,7 +22,7 @@ function Navigation() {
 
   return (
     <header className="app-header">
-      <h1>🎵 Music Streaming App</h1>
+      <h1>📖 SunoNA</h1>
       <nav>
         <a href="/">Home</a>
         <a href="/search">Search</a>
